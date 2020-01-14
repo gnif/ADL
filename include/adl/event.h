@@ -35,8 +35,9 @@ typedef enum
 
   ADL_EVENT_CLOSE,
 
-  ADL_EVENT_KEYDOWN,
-  ADL_EVENT_KEYUP,
+  ADL_EVENT_KEY_DOWN,
+  ADL_EVENT_KEY_UP,
+
   ADL_EVENT_MOUSE_MOVE,
   ADL_EVENT_MOUSE_DOWN,
   ADL_EVENT_MOUSE_UP
@@ -45,16 +46,36 @@ ADLEventType;
 
 typedef struct
 {
-  ADLWindow window;
+  unsigned int scancode;
 }
-ADLEventClose;
+ADLEventKeyboard;
+
+typedef enum
+{
+  ADL_MOUSE_BUTTON_LEFT   = 0x01,
+  ADL_MOUSE_BUTTON_MIDDLE = 0x02,
+  ADL_MOUSE_BUTTON_RIGHT  = 0x04,
+  ADL_MOUSE_BUTTON_SUP    = 0x08, // scoll up
+  ADL_MOUSE_BUTTON_SDOWN  = 0x10  // scroll down
+}
+ADLMouseButton;
+
+typedef struct
+{
+  int            x;
+  int            y;
+  ADLMouseButton buttons; // this is a bitfield
+}
+ADLEventMouse;
 
 typedef struct
 {
   ADLEventType type;
+  ADLWindow    window;
   union
   {
-    ADLEventClose close;
+    ADLEventKeyboard key;
+    ADLEventMouse    mouse;
   } u;
 }
 ADLEvent;

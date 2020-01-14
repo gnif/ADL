@@ -79,13 +79,48 @@ int main()
   ADL_STATUS status;
   while((status = adlProcessEvents(&event)) == ADL_OK)
   {
-    if (event.type == ADL_EVENT_NONE)
-      continue;
+    switch(event.type)
+    {
+      case ADL_EVENT_NONE:
+        continue;
 
-    if (event.type == ADL_EVENT_CLOSE)
-      if (event.u.close.window == window)
+      case ADL_EVENT_CLOSE:
+        printf("close event\n");
+        goto exit;
+
+      case ADL_EVENT_KEY_DOWN:
+        printf("key down: %u\n", event.u.key.scancode);
         break;
+
+      case ADL_EVENT_KEY_UP:
+        printf("key up: %u\n", event.u.key.scancode);
+        if (event.u.key.scancode == 9)
+          goto exit;
+        break;
+
+      case ADL_EVENT_MOUSE_DOWN:
+        printf("down: %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+            event.u.mouse.buttons);
+        break;
+
+      case ADL_EVENT_MOUSE_UP:
+        printf("up  : %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+            event.u.mouse.buttons);
+        break;
+
+      case ADL_EVENT_MOUSE_MOVE:
+        printf("move: %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+            event.u.mouse.buttons);
+        break;
+
+      default:
+        printf("Unhandled message: %u\n", event.type);
+        break;
+    }
   }
+
+exit:
+  printf("shutdown\n");
 
   /* cleanup */
   adlWindowDestroy(&window);

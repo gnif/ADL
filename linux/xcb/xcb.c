@@ -37,6 +37,8 @@ struct State
 
   xcb_atom_t wmProtocols;
   xcb_atom_t wmDeleteWindow;
+
+  ADLMouseButton mouseButtonState;
 };
 
 static struct State this;
@@ -140,7 +142,10 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   const uint32_t values[2] =
   {
     this.screen->white_pixel,
-    XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS
+    XCB_EVENT_MASK_EXPOSURE       |
+    XCB_EVENT_MASK_KEY_PRESS      | XCB_EVENT_MASK_KEY_RELEASE    |
+    XCB_EVENT_MASK_BUTTON_PRESS   | XCB_EVENT_MASK_BUTTON_RELEASE |
+    XCB_EVENT_MASK_POINTER_MOTION
   };
 
   xcb_window_t window = xcb_generate_id(this.xcb);
@@ -209,7 +214,6 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     return ADL_OK;
   }
 
-  //DEBUG_INFO(ADL_OK, "Event: %u", xevent->response_type);
   switch(xevent->response_type & ~0x80)
   {
     case XCB_CLIENT_MESSAGE:
@@ -221,8 +225,80 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
       if (e->data.data32[0] != this.wmDeleteWindow)
         break;
 
-      event->type           = ADL_EVENT_CLOSE;
-      event->u.close.window = (ADLWindow)(uintptr_t)e->window;
+      event->type   = ADL_EVENT_CLOSE;
+      event->window = (ADLWindow)(uintptr_t)e->window;
+      break;
+    }
+
+    case XCB_KEY_PRESS:
+    {
+      xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
+      event->type           = ADL_EVENT_KEY_DOWN;
+      event->window         = (ADLWindow)(uintptr_t)e->event;
+      event->u.key.scancode = e->detail;
+      break;
+    }
+
+    case XCB_KEY_RELEASE:
+    {
+      xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
+      event->type           = ADL_EVENT_KEY_UP;
+      event->window         = (ADLWindow)(uintptr_t)e->event;
+      event->u.key.scancode = e->detail;
+      break;
+    }
+
+    case XCB_BUTTON_PRESS:
+    {
+      xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
+      event->type      = ADL_EVENT_MOUSE_DOWN;
+      event->window    = (ADLWindow)(uintptr_t)e->event;
+      event->u.mouse.x = e->event_x;
+      event->u.mouse.y = e->event_y;
+
+      switch(e->detail)
+      {
+        case 1: this.mouseButtonState |= ADL_MOUSE_BUTTON_LEFT  ; break;
+        case 2: this.mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE; break;
+        case 3: this.mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT ; break;
+      }
+
+      event->u.mouse.buttons = this.mouseButtonState;
+      switch(e->detail)
+      {
+        case 4: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_SUP  ; break;
+        case 5: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_SDOWN; break;
+      }
+      break;
+    }
+
+    case XCB_BUTTON_RELEASE:
+    {
+      xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
+      event->type      = ADL_EVENT_MOUSE_UP;
+      event->window    = (ADLWindow)(uintptr_t)e->event;
+      event->u.mouse.x = e->event_x;
+      event->u.mouse.y = e->event_y;
+
+      switch(e->detail)
+      {
+        case 1: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_LEFT  ; break;
+        case 2: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_MIDDLE; break;
+        case 3: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_RIGHT ; break;
+      }
+
+      event->u.mouse.buttons = this.mouseButtonState;
+      break;
+    }
+
+    case XCB_MOTION_NOTIFY:
+    {
+      xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
+      event->type            = ADL_EVENT_MOUSE_MOVE;
+      event->window          = (ADLWindow)(uintptr_t)e->event;
+      event->u.mouse.x       = e->event_x;
+      event->u.mouse.y       = e->event_y;
+      event->u.mouse.buttons = this.mouseButtonState;
       break;
     }
   }
