@@ -27,11 +27,16 @@
 
 #include <xcb/xcb.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 
 struct State
 {
   xcb_connection_t * xcb;
   xcb_screen_t     * screen;
+
+  xcb_atom_t wmProtocols;
+  xcb_atom_t wmDeleteWindow;
 };
 
 static struct State this;
@@ -55,6 +60,28 @@ static const char * xcbErrString(int error)
     default:
       return "Unknown XCB Error";
    }
+}
+
+static ADL_STATUS getAtom(const char * name, xcb_atom_t * atom)
+{
+  assert(atom);
+
+  xcb_generic_error_t *     error;
+  xcb_intern_atom_cookie_t  c = xcb_intern_atom(this.xcb, 0, strlen(name), name);
+  xcb_intern_atom_reply_t * r = xcb_intern_atom_reply(this.xcb, c, &error);
+
+  if (error)
+  {
+    DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_intern_atom failed: code=%d, res=%d",
+      error->error_code, error->resource_id);
+    free(error);
+    return ADL_ERR_PLATFORM;
+  }
+
+  *atom = r->atom;
+  free(r);
+
+  return ADL_OK;
 }
 
 static ADL_STATUS xcbTest()
@@ -81,10 +108,23 @@ static ADL_STATUS xcbInitialize()
   {
     status = ADL_ERR_PLATFORM;
     DEBUG_ERROR(status, "XCB connection failed with: %s", xcbErrString(err));
+    goto err_out;
   }
 
   this.screen = xcb_setup_roots_iterator(xcb_get_setup(this.xcb)).data;
 
+  if ((status = getAtom("WM_PROTOCOLS", &this.wmProtocols)) != ADL_OK)
+    goto err_disconnect;
+
+  if ((status = getAtom("WM_DELETE_WINDOW", &this.wmDeleteWindow)) != ADL_OK)
+    goto err_disconnect;
+
+  return status;
+
+err_disconnect:
+  xcb_disconnect(this.xcb);
+  this.xcb = NULL;
+err_out:
   return status;
 }
 
@@ -92,19 +132,6 @@ static ADL_STATUS xcbDeinitialize()
 {
   xcb_disconnect(this.xcb);
   this.xcb = NULL;
-  return ADL_OK;
-}
-
-static ADL_STATUS xcbProcessEvents(ADLEvent * event)
-{
-  xcb_generic_event_t * e;
-  while((e = xcb_poll_for_event(this.xcb)) != NULL)
-  {
-    switch(e->response_type)
-    {
-    }
-    free(e);
-  }
   return ADL_OK;
 }
 
@@ -141,6 +168,9 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     return ADL_ERR_PLATFORM;
   }
 
+  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, window, this.wmProtocols,
+      XCB_ATOM_ATOM, 32, 1, &this.wmDeleteWindow);
+
   *result = (ADLWindow)((uintptr_t)window);
   return ADL_OK;
 }
@@ -166,6 +196,38 @@ ADL_STATUS xcbWindowHide(ADLWindow window)
   xcb_window_t win = (xcb_window_t)((uintptr_t)window);
   xcb_unmap_window(this.xcb, win);
   xcb_flush(this.xcb);
+  return ADL_OK;
+}
+
+static ADL_STATUS xcbProcessEvents(ADLEvent * event)
+{
+  xcb_generic_event_t * xevent;
+  xevent = xcb_poll_for_event(this.xcb);
+  if (!xevent)
+  {
+    event->type = ADL_EVENT_NONE;
+    return ADL_OK;
+  }
+
+  //DEBUG_INFO(ADL_OK, "Event: %u", xevent->response_type);
+  switch(xevent->response_type & ~0x80)
+  {
+    case XCB_CLIENT_MESSAGE:
+    {
+      xcb_client_message_event_t * e = (xcb_client_message_event_t *)xevent;
+      if (e->type != this.wmProtocols)
+        break;
+
+      if (e->data.data32[0] != this.wmDeleteWindow)
+        break;
+
+      event->type           = ADL_EVENT_CLOSE;
+      event->u.close.window = (ADLWindow)(uintptr_t)e->window;
+      break;
+    }
+  }
+
+  free(xevent);
   return ADL_OK;
 }
 
