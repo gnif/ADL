@@ -42,7 +42,7 @@ static void adlLogStderr(ADL_LOG_LEVEL logLevel, unsigned int code,
 {
   va_list ap;
   va_start(ap, format);
-  vfprintf(stdout, format, ap);
+  vfprintf(stderr, format, ap);
   va_end(ap);
 }
 
