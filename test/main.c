@@ -79,6 +79,12 @@ int main()
   ADL_STATUS status;
   while((status = adlProcessEvents(&event)) == ADL_OK)
   {
+    if (event.type == ADL_EVENT_NONE)
+      continue;
+
+    if (event.type == ADL_EVENT_CLOSE)
+      if (event.u.close.window == window)
+        break;
   }
 
   /* cleanup */

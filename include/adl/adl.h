@@ -26,6 +26,7 @@
 #define _H_ADL
 
 #include "status.h"
+#include "window.h"
 #include "event.h"
 
 ADL_STATUS adlInitialize();
@@ -34,20 +35,6 @@ ADL_STATUS adlShutdown();
 ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
 ADL_STATUS adlUsePlatform(const char * name);
 ADL_STATUS adlProcessEvents(ADLEvent * event);
-
-/**
- * Parameters for a new window
- */
-typedef struct
-{
-  int x, y, w, h;
-}
-ADLWindowDef;
-
-/**
- * Opaque window reference
- */
-typedef void * ADLWindow;
 
 ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow * result);
 ADL_STATUS adlWindowDestroy(ADLWindow * window);

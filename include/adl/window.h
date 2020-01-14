@@ -22,41 +22,21 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_EVENT
-#define _H_ADL_EVENT
+#ifndef _H_ADL_WINDOW
+#define _H_ADL_WINDOW
 
-#include "adl.h"
-#include "window.h"
-
-typedef enum
-{
-  /* this type means there are no events to process */
-  ADL_EVENT_NONE,
-
-  ADL_EVENT_CLOSE,
-
-  ADL_EVENT_KEYDOWN,
-  ADL_EVENT_KEYUP,
-  ADL_EVENT_MOUSE_MOVE,
-  ADL_EVENT_MOUSE_DOWN,
-  ADL_EVENT_MOUSE_UP
-}
-ADLEventType;
-
+/**
+ * Parameters for a new window
+ */
 typedef struct
 {
-  ADLWindow window;
+  int x, y, w, h;
 }
-ADLEventClose;
+ADLWindowDef;
 
-typedef struct
-{
-  ADLEventType type;
-  union
-  {
-    ADLEventClose close;
-  } u;
-}
-ADLEvent;
+/**
+ * Opaque window reference
+ */
+typedef void * ADLWindow;
 
 #endif
