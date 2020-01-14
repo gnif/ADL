@@ -1,12 +1,12 @@
-#Agnostic Desktop Layer
---
+# Agnostic Desktop Layer
 
 This library is intended to abstract away the system specifics related to
-creating and processing events from the display manager. It's goal is to be as
-lightweight shim between the application and the display manager, nothing more.
+creating windows and processing events from the display manager. It's goal is to
+be as lightweight shim between the application and the display manager, nothing
+more.
 
-# License
---
+##### License
+
 MIT License
 
 Copyright (c) 2020 Geoffrey McRae <geoff@hostfission.com>
