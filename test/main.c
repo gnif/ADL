@@ -28,15 +28,36 @@
 
 int main()
 {
+  int retval = 0;
+
   if (adlInitialize() != ADL_OK)
-    return -1;
+  {
+    retval = -1;
+    goto err_exit;
+  }
 
-  int count;
-  adlGetPlatformList(&count, NULL);
-  const char * platforms[count];
-  adlGetPlatformList(&count, platforms);
-  adlUsePlatform(platforms[0]);
+  /* At this point we are certain there is atleast one platform as adlInitialize
+   * wont return ADL_OK otherwise. ADL will also fail to compile if all
+   * platforms are disabled */
+  {
+    int count;
+    adlGetPlatformList(&count, NULL);
 
+    const char * platforms[count];
+    adlGetPlatformList(&count, platforms);
+
+    /* Use the first available platform, in reality you would likely loop through
+     * the list to try each platform until one succeeds, this has been left to
+     * the calling application so that a specific platform can be selected if
+     * required */
+    if (adlUsePlatform(platforms[0]) != ADL_OK)
+    {
+      retval = -1;
+      goto err_exit;
+    }
+  }
+
+  /* Create a window and show it */
   ADLWindow window;
   ADLWindowDef def =
   {
@@ -45,17 +66,25 @@ int main()
     .w = 100,
     .h = 100
   };
-  adlWindowCreate(def, &window);
+  if (adlWindowCreate(def, &window) != ADL_OK)
+  {
+    retval = -1;
+    goto err_shutdown;
+  }
+
   adlWindowShow(window);
 
+  /* Process events */
   ADLEvent event;
   ADL_STATUS status;
   while((status = adlProcessEvents(&event)) == ADL_OK)
   {
   }
 
-  adlWindowHide(window);
+  /* cleanup */
   adlWindowDestroy(&window);
+err_shutdown:
   adlShutdown();
-  return 0;
+err_exit:
+  return retval;
 }
