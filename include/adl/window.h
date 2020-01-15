@@ -47,4 +47,9 @@ typedef struct
 }
 ADLWindow;
 
+ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);
+ADL_STATUS adlWindowDestroy(ADLWindow ** window);
+ADL_STATUS adlWindowShow(ADLWindow * window);
+ADL_STATUS adlWindowHide(ADLWindow * window);
+
 #endif
