@@ -269,8 +269,30 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
       /* non-generated events need translating */
       if (!generated)
       {
+        xcb_window_t parent;
+        {
+          xcb_query_tree_cookie_t c =
+            xcb_query_tree(this.xcb, e->window);
+
+          xcb_generic_error_t *error;
+          xcb_query_tree_reply_t *r =
+            xcb_query_tree_reply(this.xcb, c, &error);
+
+          if (error)
+          {
+            DEBUG_ERROR(ADL_ERR_PLATFORM,
+              "xcb_query_tree failed: code=%d, res=%d",
+              error->error_code, error->resource_id);
+            free(error);
+            return ADL_ERR_PLATFORM;
+          }
+
+          parent = r->parent;
+          free(r);
+        }
+
         xcb_translate_coordinates_cookie_t c =
-          xcb_translate_coordinates(this.xcb, e->window, this.screen->root,
+          xcb_translate_coordinates(this.xcb, parent, this.screen->root,
               e->x, e->y);
 
         xcb_generic_error_t *error;
@@ -279,7 +301,8 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
 
         if (error)
         {
-          DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_translate_coordinates failed: code=%d, res=%d",
+          DEBUG_ERROR(ADL_ERR_PLATFORM,
+            "xcb_translate_coordinates failed: code=%d, res=%d",
             error->error_code, error->resource_id);
           free(error);
           return ADL_ERR_PLATFORM;
