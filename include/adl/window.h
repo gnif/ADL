@@ -29,12 +29,24 @@
 
 #include <stdbool.h>
 
+typedef enum
+{
+  ADL_WINDOW_FLAG_VCETNER    = 0x01,
+  ADL_WINDOW_FLAG_HCENTER    = 0x02,
+  ADL_WINDOW_FLAG_BORDERLESS = 0x04,
+  ADL_WINDOW_FLAG_FULLSCREEN = 0x08
+}
+ADLWindowFlag;
+
 /**
  * Parameters for a new window
  */
 typedef struct
 {
-  int x, y, w, h;
+  int           x, y;
+  int           w, h;
+  ADLWindowFlag flags;
+  const char *  title;
 }
 ADLWindowDef;
 
@@ -53,5 +65,6 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);
 ADL_STATUS adlWindowDestroy(ADLWindow ** window);
 ADL_STATUS adlWindowShow(ADLWindow * window);
 ADL_STATUS adlWindowHide(ADLWindow * window);
+ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title);
 
 #endif

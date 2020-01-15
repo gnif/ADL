@@ -28,6 +28,29 @@
 
 #include <stdlib.h>
 
+void windowListItemDestructor(void * item)
+{
+  ADLWindow * window = (ADLWindow *)item;
+
+  ADL_STATUS status;
+  if ((status = adl.platform->windowDestroy(window)) != ADL_OK)
+    DEBUG_ERROR(status, "windowDestroy failed");
+
+  free(window);
+}
+
+ADLWindow * windowFindByData(void * data)
+{
+  ADLLinkedListItem * item;
+  for(item = adl.windowList.head; item != NULL; item = item->next)
+  {
+    ADLWindowListItem * li = (ADLWindowListItem *)item;
+    if (ADL_GET_WINDOW_DATA(&li->window) == data)
+      return &li->window;
+  }
+  return NULL;
+}
+
 ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
 {
   ADL_INITCHECK;
@@ -62,6 +85,9 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
     adlLinkedListPop(&adl.windowList, NULL);
     return ADL_ERR_PLATFORM;
   }
+
+  if (def.title)
+    adlWindowSetTitle(win, def.title);
 
   *result = win;
   return status;
@@ -108,25 +134,9 @@ ADL_STATUS adlWindowHide(ADLWindow * window)
   return adl.platform->windowHide(window);
 }
 
-void windowListItemDestructor(void * item)
+ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title)
 {
-  ADLWindow * window = (ADLWindow *)item;
-
-  ADL_STATUS status;
-  if ((status = adl.platform->windowDestroy(window)) != ADL_OK)
-    DEBUG_ERROR(status, "windowDestroy failed");
-
-  free(window);
-}
-
-ADLWindow * windowFindByData(void * data)
-{
-  ADLLinkedListItem * item;
-  for(item = adl.windowList.head; item != NULL; item = item->next)
-  {
-    ADLWindowListItem * li = (ADLWindowListItem *)item;
-    if (ADL_GET_WINDOW_DATA(&li->window) == data)
-      return &li->window;
-  }
-  return NULL;
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+  return adl.platform->windowSetTitle(window, title);
 }

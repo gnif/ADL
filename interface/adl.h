@@ -40,6 +40,8 @@ typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
 
 typedef ADL_STATUS (*ADLPfWindowFn)(ADLWindow * window);
 
+typedef ADL_STATUS (*ADLPfWindowSetStrFn)(ADLWindow * window, const char * str);
+
 struct ADLPlatform
 {
   const char *       name;
@@ -47,10 +49,12 @@ struct ADLPlatform
   ADLPfFn            init;
   ADLPfFn            deinit;
   ADLPfProcessEvent  processEvent;
-  ADLPfWindowCreate  windowCreate;
-  ADLPfWindowFn      windowDestroy;
-  ADLPfWindowFn      windowShow;
-  ADLPfWindowFn      windowHide;
+
+  ADLPfWindowCreate   windowCreate;
+  ADLPfWindowFn       windowDestroy;
+  ADLPfWindowFn       windowShow;
+  ADLPfWindowFn       windowHide;
+  ADLPfWindowSetStrFn windowSetTitle;
 };
 
 #define adl_platform(x) \

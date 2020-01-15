@@ -66,14 +66,15 @@ ADL_STATUS adlInitialize()
 
     /* perform a sanity check on the struct */
     if (
-      !p->test          ||
-      !p->init          ||
-      !p->deinit        ||
-      !p->processEvent  ||
-      !p->windowCreate  ||
-      !p->windowDestroy ||
-      !p->windowShow    ||
-      !p->windowHide    ||
+      !p->test           ||
+      !p->init           ||
+      !p->deinit         ||
+      !p->processEvent   ||
+      !p->windowCreate   ||
+      !p->windowDestroy  ||
+      !p->windowShow     ||
+      !p->windowHide     ||
+      !p->windowSetTitle ||
       0
     ) {
       DEBUG_BUG(ADL_ERR_PLATFORM,

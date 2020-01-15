@@ -210,6 +210,16 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
   return ADL_OK;
 }
 
+ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
+{
+  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
+  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, win,
+      XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, strlen(title), title);
+  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, win,
+      XCB_ATOM_WM_ICON_NAME, XCB_ATOM_STRING, 8, strlen(title), title);
+  return ADL_OK;
+}
+
 static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event, void ** window)
 {
   xcb_generic_event_t * xevent;
@@ -444,15 +454,16 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event, void ** window)
 
 static struct ADLPlatform xcb =
 {
-  .name          = "XCB",
-  .test          = xcbTest,
-  .init          = xcbInitialize,
-  .deinit        = xcbDeinitialize,
-  .processEvent  = xcbProcessEvent,
-  .windowCreate  = xcbWindowCreate,
-  .windowDestroy = xcbWindowDestroy,
-  .windowShow    = xcbWindowShow,
-  .windowHide    = xcbWindowHide
+  .name           = "XCB",
+  .test           = xcbTest,
+  .init           = xcbInitialize,
+  .deinit         = xcbDeinitialize,
+  .processEvent   = xcbProcessEvent,
+  .windowCreate   = xcbWindowCreate,
+  .windowDestroy  = xcbWindowDestroy,
+  .windowShow     = xcbWindowShow,
+  .windowHide     = xcbWindowHide,
+  .windowSetTitle = xcbWindowSetTitle
 };
 
 adl_platform(xcb);

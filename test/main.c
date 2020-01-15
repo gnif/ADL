@@ -60,10 +60,10 @@ int main()
   /* Create a window and show it */
   ADLWindowDef def =
   {
-    .x = 0,
-    .y = 0,
-    .w = 100,
-    .h = 100
+    .x = 0  , .y = 0  ,
+    .w = 200, .h = 200,
+
+    .title = "ADL Test"
   };
   ADLWindow * window;
   if (adlWindowCreate(def, &window) != ADL_OK)
