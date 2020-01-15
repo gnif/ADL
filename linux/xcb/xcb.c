@@ -212,11 +212,9 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
   xcb_generic_event_t * xevent;
   xevent = xcb_poll_for_event(this.xcb);
   if (!xevent)
-  {
-    event->type = ADL_EVENT_NONE;
     return ADL_OK;
-  }
 
+  const bool generated = (xevent->response_type & 0x80) == 0x80;
   switch(xevent->response_type & ~0x80)
   {
     case XCB_CLIENT_MESSAGE:
@@ -265,6 +263,11 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
 
     case XCB_CONFIGURE_NOTIFY:
     {
+      /* undocumented as far as I can tell. non-generated X messages should be
+       * ignored as the details in them for window move events are incorrect */
+      if (!generated)
+        break;
+
       xcb_configure_notify_event_t * e =
         (xcb_configure_notify_event_t *)xevent;
 
