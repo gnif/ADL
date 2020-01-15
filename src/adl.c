@@ -292,23 +292,24 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
   ADL_NOT_NULL_CHECK(event);
   ADL_STATUS status;
 
-  event->type = ADL_EVENT_NONE;
-  if ((status = adl.platform->processEvent(event)) != ADL_OK)
+  event->type   = ADL_EVENT_NONE;
+  event->window = NULL;
+
+  void * windowData = NULL;
+  if ((status = adl.platform->processEvent(event, &windowData)) != ADL_OK)
     return status;
 
   if (event->type == ADL_EVENT_NONE)
     return status;
 
   ADLWindow * window = NULL;
-  if (event->window)
+  if (windowData)
   {
-    void * data = (void *)event->window;
-
     ADLLinkedListItem * item;
     for(item = adl.windowList.head; item != NULL; item = item->next)
     {
       ADLWindowListItem * li = (ADLWindowListItem *)item;
-      if (ADL_GET_WINDOW_DATA(&li->window) != data)
+      if (ADL_GET_WINDOW_DATA(&li->window) != windowData)
         continue;
 
       event->window = &li->window;

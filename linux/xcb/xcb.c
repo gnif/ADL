@@ -207,7 +207,7 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
   return ADL_OK;
 }
 
-static ADL_STATUS xcbProcessEvent(ADLEvent * event)
+static ADL_STATUS xcbProcessEvent(ADLEvent * event, void ** window)
 {
   xcb_generic_event_t * xevent;
   xevent = xcb_poll_for_event(this.xcb);
@@ -226,24 +226,24 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
       if (e->data.data32[0] != this.wmDeleteWindow)
         break;
 
-      event->type   = ADL_EVENT_CLOSE;
-      event->window = (ADLWindow *)(uintptr_t)e->window;
+      event->type = ADL_EVENT_CLOSE;
+      *window        = (void *)(uintptr_t)e->window;
       break;
     }
 
     case XCB_MAP_NOTIFY:
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
-      event->type    = ADL_EVENT_SHOW;
-      event->window  = (ADLWindow *)(uintptr_t)e->window;
+      event->type = ADL_EVENT_SHOW;
+      *window        = (void *)(uintptr_t)e->window;
       break;
     }
 
     case XCB_UNMAP_NOTIFY:
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
-      event->type    = ADL_EVENT_HIDE;
-      event->window  = (ADLWindow *)(uintptr_t)e->window;
+      event->type = ADL_EVENT_HIDE;
+      *window        = (void *)(uintptr_t)e->window;
       break;
     }
 
@@ -257,7 +257,7 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
       else
         event->type = ADL_EVENT_SHOW;
 
-      event->window = (ADLWindow *)(uintptr_t)e->window;
+      *window = (void *)(uintptr_t)e->window;
       break;
     }
 
@@ -314,11 +314,12 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
       }
 
       event->type    = ADL_EVENT_WINDOW_CHANGE;
-      event->window  = (ADLWindow *)(uintptr_t)e->window;
       event->u.win.x = e->x;
       event->u.win.y = e->y;
       event->u.win.w = e->width;
       event->u.win.h = e->height;
+
+      *window = (void *)(uintptr_t)e->window;
       break;
     }
 
@@ -326,8 +327,8 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_DOWN;
-      event->window         = (ADLWindow *)(uintptr_t)e->event;
       event->u.key.scancode = e->detail;
+      *window = (void *)(uintptr_t)e->event;
       break;
     }
 
@@ -335,8 +336,8 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
     {
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
-      event->window         = (ADLWindow *)(uintptr_t)e->event;
       event->u.key.scancode = e->detail;
+      *window = (void *)(uintptr_t)e->event;
       break;
     }
 
@@ -344,9 +345,9 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
     {
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
-      event->window    = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
+      *window = (void *)(uintptr_t)e->event;
 
       switch(e->detail)
       {
@@ -376,9 +377,9 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
     {
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
-      event->window    = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
+      *window = (void *)(uintptr_t)e->event;
 
       switch(e->detail)
       {
@@ -401,10 +402,10 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event)
     {
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
-      event->window          = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
       event->u.mouse.buttons = this.mouseButtonState;
+      *window = (void *)(uintptr_t)e->event;
       break;
     }
   }
