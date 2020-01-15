@@ -28,6 +28,8 @@
 #include "linkedlist.h"
 #include "adl/window.h"
 
+#include <stdint.h>
+
 typedef struct
 {
   ADLLinkedListItem item;
@@ -44,6 +46,6 @@ ADLWindowListItem;
   (((void *)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
 
 void windowListItemDestructor(void * item);
-ADLWindow * windowFindByData(void * data);
+ADLWindow * windowFindByData(uintptr_t data);
 
 #endif

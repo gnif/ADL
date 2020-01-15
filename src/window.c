@@ -39,13 +39,13 @@ void windowListItemDestructor(void * item)
   free(window);
 }
 
-ADLWindow * windowFindByData(void * data)
+ADLWindow * windowFindByData(uintptr_t data)
 {
   ADLLinkedListItem * item;
   for(item = adl.windowList.head; item != NULL; item = item->next)
   {
     ADLWindowListItem * li = (ADLWindowListItem *)item;
-    if (ADL_GET_WINDOW_DATA(&li->window) == data)
+    if (*(uintptr_t*)ADL_GET_WINDOW_DATA(&li->window) == data)
       return &li->window;
   }
   return NULL;
