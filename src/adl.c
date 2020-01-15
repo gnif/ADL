@@ -201,19 +201,8 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
 
   ADLWindow * window = NULL;
   if (windowData)
-  {
-    ADLLinkedListItem * item;
-    for(item = adl.windowList.head; item != NULL; item = item->next)
-    {
-      ADLWindowListItem * li = (ADLWindowListItem *)item;
-      if (ADL_GET_WINDOW_DATA(&li->window) != windowData)
-        continue;
-
-      event->window = &li->window;
-      window        = &li->window;
-      break;
-    }
-  }
+    event->window = window =
+      windowFindByData(windowData);
 
   switch(event->type)
   {

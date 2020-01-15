@@ -47,5 +47,6 @@ ADLWindowListItem;
   *(void **)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = (v)
 
 void windowListItemDestructor(void * item);
+ADLWindow * windowFindByData(void * data);
 
 #endif
