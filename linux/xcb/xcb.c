@@ -45,7 +45,11 @@ struct State
 
 typedef struct
 {
+  uintptr_t    data;
+
   xcb_window_t window;
+  xcb_window_t parent;
+  int transX, transY;
 }
 WindowData;
 
@@ -153,6 +157,50 @@ static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props
     changeProperty(XCB_PROP_MODE_REPLACE, window, IA_MOTIF_WM_HINTS,
         IA_XCB_ATOM_INTEGER, 32, 5, &hints);
   }
+}
+
+static ADL_STATUS getParentWindowOffset(xcb_window_t window, WindowData * data)
+{
+  xcb_generic_error_t * error;
+  if (!data->parent)
+  {
+    xcb_query_tree_cookie_t qc = xcb_query_tree(this.xcb, window);
+    xcb_query_tree_reply_t *qr = xcb_query_tree_reply(this.xcb, qc, &error);
+
+    if (error)
+    {
+      DEBUG_ERROR(ADL_ERR_PLATFORM,
+        "xcb_query_tree failed: code=%d, res=%d",
+        error->error_code, error->resource_id);
+      free(error);
+      return ADL_ERR_PLATFORM;
+    }
+
+    data->parent = qr->parent;
+    free(qr);
+  }
+
+  xcb_translate_coordinates_cookie_t tc =
+    xcb_translate_coordinates(this.xcb, data->parent,
+        this.screen->root, 0, 0);
+
+  xcb_translate_coordinates_reply_t *tr =
+    xcb_translate_coordinates_reply(this.xcb, tc, &error);
+
+  if (error)
+  {
+    DEBUG_ERROR(ADL_ERR_PLATFORM,
+      "xcb_translate_coordinates failed: code=%d, res=%d",
+      error->error_code, error->resource_id);
+    free(error);
+    return ADL_ERR_PLATFORM;
+  }
+
+  data->transX = tr->dst_x;
+  data->transY = tr->dst_y;
+  free(tr);
+
+  return ADL_OK;
 }
 
 static ADL_STATUS xcbTest()
@@ -263,13 +311,16 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     return ADL_ERR_PLATFORM;
   }
 
+  WindowData * win = ADL_GET_WINDOW_DATA(result);
+  win->data   = window;
+  win->window = window;
+  win->parent = 0;
+
+  /* register for close events */
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
   updateWindowProperties(window, def);
-
-  WindowData * win = ADL_GET_WINDOW_DATA(result);
-  win->window = window;
   return ADL_OK;
 }
 
@@ -351,6 +402,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
   if (!xevent)
     return ADL_OK;
 
+  ADL_STATUS status;
   const bool generated = (xevent->response_type & 0x80) == 0x80;
   switch(xevent->response_type & ~0x80)
   {
@@ -364,7 +416,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         break;
 
       event->type   = ADL_EVENT_CLOSE;
-      event->window = windowFindByData((void *)(uintptr_t)e->window);
+      event->window = windowFindByData(e->window);
       break;
     }
 
@@ -372,7 +424,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_SHOW;
-      event->window = windowFindByData((void *)(uintptr_t)e->window);
+      event->window = windowFindByData(e->window);
       break;
     }
 
@@ -380,7 +432,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_HIDE;
-      event->window = windowFindByData((void *)(uintptr_t)e->window);
+      event->window = windowFindByData(e->window);
       break;
     }
 
@@ -394,7 +446,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       else
         event->type = ADL_EVENT_SHOW;
 
-      event->window = windowFindByData((void *)(uintptr_t)e->window);
+      event->window = windowFindByData(e->window);
       break;
     }
 
@@ -403,55 +455,20 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       xcb_configure_notify_event_t * e =
         (xcb_configure_notify_event_t *)xevent;
 
+      event->type   = ADL_EVENT_WINDOW_CHANGE;
+      event->window = windowFindByData(e->window);
+
       /* non-generated events need translating */
-      if (!generated)
+      if (!generated && event->window)
       {
-        xcb_window_t parent;
-        {
-          xcb_query_tree_cookie_t c =
-            xcb_query_tree(this.xcb, e->window);
+        WindowData * data = ADL_GET_WINDOW_DATA(event->window);
+        if ((status = getParentWindowOffset(e->window, data)) != ADL_OK)
+          return status;
 
-          xcb_generic_error_t *error;
-          xcb_query_tree_reply_t *r =
-            xcb_query_tree_reply(this.xcb, c, &error);
-
-          if (error)
-          {
-            DEBUG_ERROR(ADL_ERR_PLATFORM,
-              "xcb_query_tree failed: code=%d, res=%d",
-              error->error_code, error->resource_id);
-            free(error);
-            return ADL_ERR_PLATFORM;
-          }
-
-          parent = r->parent;
-          free(r);
-        }
-
-        xcb_translate_coordinates_cookie_t c =
-          xcb_translate_coordinates(this.xcb, parent, this.screen->root,
-              e->x, e->y);
-
-        xcb_generic_error_t *error;
-        xcb_translate_coordinates_reply_t *r =
-          xcb_translate_coordinates_reply(this.xcb, c, &error);
-
-        if (error)
-        {
-          DEBUG_ERROR(ADL_ERR_PLATFORM,
-            "xcb_translate_coordinates failed: code=%d, res=%d",
-            error->error_code, error->resource_id);
-          free(error);
-          return ADL_ERR_PLATFORM;
-        }
-
-        e->x = r->dst_x;
-        e->y = r->dst_y;
-        free(r);
+        e->x += data->transX;
+        e->y += data->transY;
       }
 
-      event->type    = ADL_EVENT_WINDOW_CHANGE;
-      event->window  = windowFindByData((void *)(uintptr_t)e->window);
       event->u.win.x = e->x;
       event->u.win.y = e->y;
       event->u.win.w = e->width;
@@ -463,7 +480,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_DOWN;
-      event->window         = windowFindByData((void *)(uintptr_t)e->event);
+      event->window         = windowFindByData(e->event);
       event->u.key.scancode = e->detail;
       break;
     }
@@ -472,7 +489,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
-      event->window         = windowFindByData((void *)(uintptr_t)e->event);
+      event->window         = windowFindByData(e->event);
       event->u.key.scancode = e->detail;
       break;
     }
@@ -481,7 +498,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
-      event->window    = windowFindByData((void *)(uintptr_t)e->event);
+      event->window    = windowFindByData(e->event);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
@@ -517,7 +534,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
-      event->window    = windowFindByData((void *)(uintptr_t)e->event);
+      event->window    = windowFindByData(e->event);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
@@ -542,7 +559,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
-      event->window          = windowFindByData((void *)(uintptr_t)e->event);
+      event->window          = windowFindByData(e->event);
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
       event->u.mouse.buttons = this.mouseButtonState;
