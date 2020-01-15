@@ -321,6 +321,9 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
   switch(event->type)
   {
     case ADL_EVENT_SHOW:
+      if (!window)
+        break;
+
       if (window->visible)
       {
         // swallow repeat events
@@ -331,6 +334,9 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
       break;
 
     case ADL_EVENT_HIDE:
+      if (!window)
+        break;
+
       if (!window->visible)
       {
         // swallow repeat events
@@ -343,6 +349,9 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
     case ADL_EVENT_MOUSE_MOVE:
     case ADL_EVENT_MOUSE_DOWN:
     case ADL_EVENT_MOUSE_UP  :
+      if (!window)
+        break;
+
       // fill in the relX and relY fields
       if (!window->haveMousePos)
       {
@@ -361,6 +370,9 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
       break;
 
     case ADL_EVENT_WINDOW_CHANGE:
+      if (!window)
+        break;
+
       if (!(window->x != event->u.win.x ||
             window->y != event->u.win.y ||
             window->w != event->u.win.w ||
