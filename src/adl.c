@@ -193,19 +193,13 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
   event->type   = ADL_EVENT_NONE;
   event->window = NULL;
 
-  void * windowData = NULL;
-  if ((status = adl.platform->processEvent(timeout, event,
-          &windowData)) != ADL_OK)
+  if ((status = adl.platform->processEvent(timeout, event)) != ADL_OK)
     return status;
 
   if (event->type == ADL_EVENT_NONE)
     return status;
 
-  ADLWindow * window = NULL;
-  if (windowData)
-    event->window = window =
-      windowFindByData(windowData);
-
+  ADLWindow * window = event->window;
   switch(event->type)
   {
     case ADL_EVENT_SHOW:
