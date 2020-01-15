@@ -27,6 +27,7 @@
 
 #include "interface/adl.h"
 #include "logging.h"
+#include "atoms.h"
 
 #include <xcb/xcb.h>
 #include <stdlib.h>
@@ -38,9 +39,6 @@ struct State
   xcb_connection_t * xcb;
   int                fd;
   xcb_screen_t     * screen;
-
-  xcb_atom_t wmProtocols;
-  xcb_atom_t wmDeleteWindow;
 
   ADLMouseButton mouseButtonState;
 };
@@ -73,7 +71,7 @@ static ADL_STATUS getAtom(const char * name, xcb_atom_t * atom)
   assert(atom);
 
   xcb_generic_error_t *     error;
-  xcb_intern_atom_cookie_t  c = xcb_intern_atom(this.xcb, 0, strlen(name), name);
+  xcb_intern_atom_cookie_t  c = xcb_intern_atom(this.xcb, 1, strlen(name), name);
   xcb_intern_atom_reply_t * r = xcb_intern_atom_reply(this.xcb, c, &error);
 
   if (error)
@@ -119,11 +117,17 @@ static ADL_STATUS xcbInitialize()
 
   this.screen = xcb_setup_roots_iterator(xcb_get_setup(this.xcb)).data;
 
-  if ((status = getAtom("WM_PROTOCOLS", &this.wmProtocols)) != ADL_OK)
-    goto err_disconnect;
+  /* initialize the atom lookup table */
+  for(int i = 0; i < IA_COUNT; ++i)
+  {
+    /* skip over values that are known, ie XCB_* */
+    if (internAtom[i].atom)
+      continue;
 
-  if ((status = getAtom("WM_DELETE_WINDOW", &this.wmDeleteWindow)) != ADL_OK)
-    goto err_disconnect;
+    /* try and fetch the atoms for values that are not known */
+    if ((status = getAtom(internAtom[i].name, &internAtom[i].atom)) != ADL_OK)
+      goto err_disconnect;
+  }
 
   this.fd = xcb_get_file_descriptor(this.xcb);
   return status;
@@ -179,8 +183,8 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     return ADL_ERR_PLATFORM;
   }
 
-  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, window, this.wmProtocols,
-      XCB_ATOM_ATOM, 32, 1, &this.wmDeleteWindow);
+  changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
+    IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
   ADL_SET_WINDOW_DATA(result, (void*)(uintptr_t)window);
   return ADL_OK;
@@ -213,10 +217,25 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
 ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
 {
   xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
-  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, win,
-      XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, strlen(title), title);
-  xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, win,
-      XCB_ATOM_WM_ICON_NAME, XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_ICON_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_VISIBLE_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_ICON_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_VISIBLE_ICON_NAME,
+    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+
   return ADL_OK;
 }
 
@@ -254,10 +273,10 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event, void ** window)
     case XCB_CLIENT_MESSAGE:
     {
       xcb_client_message_event_t * e = (xcb_client_message_event_t *)xevent;
-      if (e->type != this.wmProtocols)
+      if (e->type != internAtom[IA_WM_PROTOCOLS].atom)
         break;
 
-      if (e->data.data32[0] != this.wmDeleteWindow)
+      if (e->data.data32[0] != internAtom[IA_WM_DELETE_WINDOW].atom)
         break;
 
       event->type = ADL_EVENT_CLOSE;
