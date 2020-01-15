@@ -40,6 +40,7 @@ typedef struct
 {
   int          x, y;
   unsigned int w, h;
+  bool         visible;
 
   bool   haveMousePos;
   int    mouseX, mouseY;

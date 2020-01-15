@@ -143,9 +143,10 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   const uint32_t values[2] =
   {
     this.screen->white_pixel,
-    XCB_EVENT_MASK_EXPOSURE       |
-    XCB_EVENT_MASK_KEY_PRESS      | XCB_EVENT_MASK_KEY_RELEASE    |
-    XCB_EVENT_MASK_BUTTON_PRESS   | XCB_EVENT_MASK_BUTTON_RELEASE |
+    XCB_EVENT_MASK_EXPOSURE         |
+    XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_VISIBILITY_CHANGE |
+    XCB_EVENT_MASK_KEY_PRESS        | XCB_EVENT_MASK_KEY_RELEASE       |
+    XCB_EVENT_MASK_BUTTON_PRESS     | XCB_EVENT_MASK_BUTTON_RELEASE    |
     XCB_EVENT_MASK_POINTER_MOTION
   };
 
@@ -229,6 +230,50 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
 
       event->type   = ADL_EVENT_CLOSE;
       event->window = (ADLWindow *)(uintptr_t)e->window;
+      break;
+    }
+
+    case XCB_MAP_NOTIFY:
+    {
+      xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
+      event->type    = ADL_EVENT_SHOW;
+      event->window  = (ADLWindow *)(uintptr_t)e->window;
+      break;
+    }
+
+    case XCB_UNMAP_NOTIFY:
+    {
+      xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
+      event->type    = ADL_EVENT_HIDE;
+      event->window  = (ADLWindow *)(uintptr_t)e->window;
+      break;
+    }
+
+    case XCB_VISIBILITY_NOTIFY:
+    {
+      xcb_visibility_notify_event_t * e =
+        (xcb_visibility_notify_event_t *)xevent;
+
+      if (e->state == XCB_VISIBILITY_FULLY_OBSCURED)
+        event->type = ADL_EVENT_HIDE;
+      else
+        event->type = ADL_EVENT_SHOW;
+
+      event->window = (ADLWindow *)(uintptr_t)e->window;
+      break;
+    }
+
+    case XCB_CONFIGURE_NOTIFY:
+    {
+      xcb_configure_notify_event_t * e =
+        (xcb_configure_notify_event_t *)xevent;
+
+      event->type    = ADL_EVENT_WINDOW_CHANGE;
+      event->window  = (ADLWindow *)(uintptr_t)e->window;
+      event->u.win.x = e->x;
+      event->u.win.y = e->y;
+      event->u.win.w = e->width;
+      event->u.win.h = e->height;
       break;
     }
 

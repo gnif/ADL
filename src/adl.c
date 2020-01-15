@@ -221,6 +221,12 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
     return status;
 
   ADLWindow * win = &item->window;
+
+  win->x = def.x;
+  win->y = def.y;
+  win->w = def.w;
+  win->h = def.h;
+
   status = adl.platform->windowCreate(def, win);
   if (status == ADL_OK && (!ADL_GET_WINDOW_DATA(win)))
   {
@@ -313,6 +319,26 @@ ADL_STATUS adlProcessEvents(ADLEvent * event)
 
   switch(event->type)
   {
+    case ADL_EVENT_SHOW:
+      if (window->visible)
+      {
+        // swallow repeat events
+        event->type = ADL_EVENT_NONE;
+        break;
+      }
+      window->visible = true;
+      break;
+
+    case ADL_EVENT_HIDE:
+      if (!window->visible)
+      {
+        // swallow repeat events
+        event->type = ADL_EVENT_NONE;
+        break;
+      }
+      window->visible = false;
+      break;
+
     case ADL_EVENT_MOUSE_MOVE:
     case ADL_EVENT_MOUSE_DOWN:
     case ADL_EVENT_MOUSE_UP  :
@@ -331,6 +357,22 @@ ADL_STATUS adlProcessEvents(ADLEvent * event)
       event->u.mouse.relY = event->u.mouse.y - window->mouseY;
       window->mouseX      = event->u.mouse.x;
       window->mouseY      = event->u.mouse.y;
+      break;
+
+    case ADL_EVENT_WINDOW_CHANGE:
+      if (!(window->x != event->u.win.x ||
+            window->y != event->u.win.y ||
+            window->w != event->u.win.w ||
+            window->h != event->u.win.h))
+      {
+        event->type = ADL_EVENT_NONE;
+        break;
+      }
+
+      window->x = event->u.win.x;
+      window->y = event->u.win.y;
+      window->w = event->u.win.w;
+      window->h = event->u.win.h;
       break;
 
     default:

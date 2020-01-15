@@ -88,6 +88,20 @@ int main()
         printf("close event\n");
         goto exit;
 
+      case ADL_EVENT_SHOW:
+        printf("show event\n");
+        break;
+
+      case ADL_EVENT_HIDE:
+        printf("hide event\n");
+        break;
+
+      case ADL_EVENT_WINDOW_CHANGE:
+        printf("change event: x:%-4d y:%-4d w:%-4d h:%-4d\n",
+            event.u.win.x, event.u.win.y,
+            event.u.win.w, event.u.win.h);
+        break;
+
       case ADL_EVENT_KEY_DOWN:
         printf("key down: %u\n", event.u.key.scancode);
         break;

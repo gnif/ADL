@@ -34,15 +34,24 @@ typedef enum
   ADL_EVENT_NONE,
 
   ADL_EVENT_CLOSE,
+  ADL_EVENT_SHOW,
+  ADL_EVENT_HIDE,
+  ADL_EVENT_WINDOW_CHANGE,
 
   ADL_EVENT_KEY_DOWN,
   ADL_EVENT_KEY_UP,
 
   ADL_EVENT_MOUSE_MOVE,
   ADL_EVENT_MOUSE_DOWN,
-  ADL_EVENT_MOUSE_UP
+  ADL_EVENT_MOUSE_UP,
 }
 ADLEventType;
+
+typedef struct
+{
+  int x, y, w, h;
+}
+ADLEventWindow;
 
 typedef struct
 {
@@ -83,6 +92,7 @@ typedef struct
   ADLWindow *  window;
   union
   {
+    ADLEventWindow   win;
     ADLEventKeyboard key;
     ADLEventMouse    mouse;
   } u;
