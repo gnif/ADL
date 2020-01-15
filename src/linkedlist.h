@@ -22,23 +22,39 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL
-#define _H_ADL
+#ifndef _H_SRC_LINKEDLIST
+#define _H_SRC_LINKEDLIST
 
-#include "status.h"
-#include "window.h"
-#include "event.h"
+#include "adl/status.h"
 
-ADL_STATUS adlInitialize();
-ADL_STATUS adlShutdown();
+#include <stddef.h>
+#include <stdbool.h>
 
-ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
-ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvents(ADLEvent * event);
+typedef struct _ADLLinkedListItem
+{
+  struct _ADLLinkedListItem * prev;
+  struct _ADLLinkedListItem * next;
+}
+ADLLinkedListItem;
 
-ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);
-ADL_STATUS adlWindowDestroy(ADLWindow ** window);
-ADL_STATUS adlWindowShow(ADLWindow * window);
-ADL_STATUS adlWindowHide(ADLWindow * window);
+typedef struct
+{
+  size_t              size;
+  unsigned int        count;
+  ADLLinkedListItem * head;
+  ADLLinkedListItem * tail;
+}
+ADLLinkedList;
+
+ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedList * list);
+ADL_STATUS adlLinkedListFree(ADLLinkedList * list);
+
+ADL_STATUS adlLinkedListNewItem(ADLLinkedList * list,
+    ADLLinkedListItem ** result);
+
+ADL_STATUS adlLinkedListPush  (ADLLinkedList * list, ADLLinkedListItem *  data);
+ADL_STATUS adlLinkedListPop   (ADLLinkedList * list, ADLLinkedListItem ** result);
+ADL_STATUS adlLinkedListRemove(ADLLinkedList * list, ADLLinkedListItem ** item,
+    bool freeItem);
 
 #endif

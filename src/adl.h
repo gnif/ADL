@@ -30,19 +30,6 @@
 
 #include "adl/logging.h"
 
-struct ADL
-{
-  bool initDone;
-
-  const struct ADLPlatform ** platformList;
-  int                         platformListCount;
-  int                         numPlatforms;
-
-  const struct ADLPlatform * platform;
-};
-
-extern struct ADL adl;
-
 #define ADL_INITCHECK \
   if (!adl.initDone) \
   { \
@@ -56,5 +43,21 @@ extern struct ADL adl;
     DEBUG_ERROR(ADL_ERR_INVALID_ARGUMENT, #x " == NULL"); \
     return ADL_ERR_INVALID_ARGUMENT; \
   }
+
+#define ADL_CHECK_TYPE(type, x) \
+  ({ \
+    type __dummy; \
+    typeof(x) __dummy2; \
+    (void)(&__dummy == &__dummy2); \
+    (x); \
+  })
+
+/* ADL always allocates sizeof(void*) extra after the ADLWindow struct for
+ * Platform storage, use these macros to get and set this field */
+#define ADL_GET_WINDOW_DATA(x) \
+  (*((void **)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
+
+#define ADL_SET_WINDOW_DATA(x, v) \
+  *(void **)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = (v)
 
 #endif

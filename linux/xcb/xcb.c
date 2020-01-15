@@ -22,6 +22,7 @@
   SOFTWARE.
 */
 
+#include "adl.h"
 #include "interface/adl.h"
 #include "logging.h"
 
@@ -176,29 +177,30 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   xcb_change_property(this.xcb, XCB_PROP_MODE_REPLACE, window, this.wmProtocols,
       XCB_ATOM_ATOM, 32, 1, &this.wmDeleteWindow);
 
-  *result = (ADLWindow)((uintptr_t)window);
+  ADL_SET_WINDOW_DATA(result, (void*)(uintptr_t)window);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowDestroy(ADLWindow window)
+ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)((uintptr_t)window);
+  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
   xcb_destroy_window(this.xcb, win);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowShow(ADLWindow window)
+ADL_STATUS xcbWindowShow(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)((uintptr_t)window);
+  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
+  DEBUG_INFO(ADL_OK, "win: %x", win);
   xcb_map_window(this.xcb, win);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowHide(ADLWindow window)
+ADL_STATUS xcbWindowHide(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)((uintptr_t)window);
+  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
   xcb_unmap_window(this.xcb, win);
   xcb_flush(this.xcb);
   return ADL_OK;
@@ -226,7 +228,7 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
         break;
 
       event->type   = ADL_EVENT_CLOSE;
-      event->window = (ADLWindow)(uintptr_t)e->window;
+      event->window = (ADLWindow *)(uintptr_t)e->window;
       break;
     }
 
@@ -234,7 +236,7 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_DOWN;
-      event->window         = (ADLWindow)(uintptr_t)e->event;
+      event->window         = (ADLWindow *)(uintptr_t)e->event;
       event->u.key.scancode = e->detail;
       break;
     }
@@ -243,7 +245,7 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     {
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
-      event->window         = (ADLWindow)(uintptr_t)e->event;
+      event->window         = (ADLWindow *)(uintptr_t)e->event;
       event->u.key.scancode = e->detail;
       break;
     }
@@ -252,22 +254,30 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     {
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
-      event->window    = (ADLWindow)(uintptr_t)e->event;
+      event->window    = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
       switch(e->detail)
       {
-        case 1: this.mouseButtonState |= ADL_MOUSE_BUTTON_LEFT  ; break;
-        case 2: this.mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE; break;
-        case 3: this.mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT ; break;
+        case 1: this.mouseButtonState |= ADL_MOUSE_BUTTON_LEFT   ; break;
+        case 2: this.mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE ; break;
+        case 3: this.mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT  ; break;
+        case 8: this.mouseButtonState |= ADL_MOUSE_BUTTON_BACK   ; break;
+        case 9: this.mouseButtonState |= ADL_MOUSE_BUTTON_FORWARD; break;
+        default:
+          // custom buttons
+          this.mouseButtonState |= ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
+          break;
       }
 
       event->u.mouse.buttons = this.mouseButtonState;
       switch(e->detail)
       {
-        case 4: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_SUP  ; break;
-        case 5: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_SDOWN; break;
+        case 4: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_WUP   ; break;
+        case 5: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_WDOWN ; break;
+        case 6: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_WLEFT ; break;
+        case 7: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_WRIGHT; break;
       }
       break;
     }
@@ -276,15 +286,21 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     {
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
-      event->window    = (ADLWindow)(uintptr_t)e->event;
+      event->window    = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
       switch(e->detail)
       {
-        case 1: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_LEFT  ; break;
-        case 2: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_MIDDLE; break;
-        case 3: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_RIGHT ; break;
+        case 1: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_LEFT   ; break;
+        case 2: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_MIDDLE ; break;
+        case 3: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_RIGHT  ; break;
+        case 8: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_BACK   ; break;
+        case 9: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_FORWARD; break;
+        default:
+          // custom buttons
+          this.mouseButtonState &= ~ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
+          break;
       }
 
       event->u.mouse.buttons = this.mouseButtonState;
@@ -295,7 +311,7 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
     {
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
-      event->window          = (ADLWindow)(uintptr_t)e->event;
+      event->window          = (ADLWindow *)(uintptr_t)e->event;
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
       event->u.mouse.buttons = this.mouseButtonState;

@@ -24,15 +24,37 @@
 
 #include "adl.h"
 #include "logging.h"
+#include "linkedlist.h"
 
 #include "interface/adl.h"
 
 #include "adl/adl.h"
 #include "adl/status.h"
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+
+struct ADL
+{
+  bool initDone;
+
+  const struct ADLPlatform ** platformList;
+  int                         platformListCount;
+  int                         numPlatforms;
+
+  const struct ADLPlatform * platform;
+
+  ADLLinkedList windowList;
+};
+
+typedef struct
+{
+  ADLLinkedListItem item;
+  ADLWindow window;
+}
+ADLWindowListItem;
 
 struct ADL adl = { 0 };
 
@@ -165,6 +187,10 @@ ADL_STATUS adlUsePlatform(const char * name)
   }
 
   ADL_STATUS status;
+  if ((status = adlLinkedListNew(sizeof(ADLWindowListItem) + sizeof(void *),
+          &adl.windowList)) != ADL_OK)
+    return status;
+
   if ((status = adl.platform->init()) != ADL_OK)
   {
     DEBUG_ERROR(status, "Platform `%s` initialization failed", name);
@@ -175,7 +201,7 @@ ADL_STATUS adlUsePlatform(const char * name)
   return ADL_OK;
 }
 
-ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow * result)
+ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
 {
   ADL_INITCHECK;
   ADL_STATUS status;
@@ -187,29 +213,28 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow * result)
   }
 
   *result = NULL;
-  status  = adl.platform->windowCreate(def, result);
-  if (status == ADL_OK)
+
+  ADLWindowListItem * item;
+  status = adlLinkedListNewItem(&adl.windowList, (ADLLinkedListItem **)&item);
+  if (status != ADL_OK)
+    return status;
+
+  ADLWindow * win = &item->window;
+  status = adl.platform->windowCreate(def, win);
+  if (status == ADL_OK && (!ADL_GET_WINDOW_DATA(win)))
   {
-    if (!*result)
-      DEBUG_BUG(ADL_ERR_PLATFORM,
-          "%s->windowCreate did not return a result", adl.platform->name);
-  }
-  else
-  {
-    *result = NULL;
+    DEBUG_BUG(ADL_ERR_PLATFORM,
+        "%s->windowCreate did not set the window data", adl.platform->name);
+
+    adlLinkedListPop(&adl.windowList, NULL);
+    return ADL_ERR_PLATFORM;
   }
 
+  *result = win;
   return status;
 }
 
-ADL_STATUS adlProcessEvents(ADLEvent * event)
-{
-  ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(event);
-  return adl.platform->processEvents(event);
-}
-
-ADL_STATUS adlWindowDestroy(ADLWindow * window)
+ADL_STATUS adlWindowDestroy(ADLWindow ** window)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(window);
@@ -218,22 +243,98 @@ ADL_STATUS adlWindowDestroy(ADLWindow * window)
     return ADL_OK;
 
   ADL_STATUS status;
-  status = adl.platform->windowDestroy(*window);
-  *window = NULL;
+  if ((status = adl.platform->windowDestroy(*window)) != ADL_OK)
+  {
+    DEBUG_ERROR(status, "windowDestroy failed");
+    return status;
+  }
 
+  ADLLinkedListItem * item;
+  for(item = adl.windowList.head; item != NULL; item = item->next)
+  {
+    ADLWindowListItem * li = (ADLWindowListItem *)item;
+    if (&li->window != *window)
+      continue;
+
+    if ((status = adlLinkedListRemove(&adl.windowList, &item, true)) != ADL_OK)
+      DEBUG_BUG(status, "failed to remove window from the windowList");
+    break;
+  }
+
+  *window = NULL;
   return status;
 }
 
-ADL_STATUS adlWindowShow(ADLWindow window)
+ADL_STATUS adlWindowShow(ADLWindow * window)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(window);
   return adl.platform->windowShow(window);
 }
 
-ADL_STATUS adlWindowHide(ADLWindow window)
+ADL_STATUS adlWindowHide(ADLWindow * window)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(window);
   return adl.platform->windowHide(window);
+}
+
+ADL_STATUS adlProcessEvents(ADLEvent * event)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(event);
+  ADL_STATUS status;
+
+  event->type = ADL_EVENT_NONE;
+  if ((status = adl.platform->processEvents(event)) != ADL_OK)
+    return status;
+
+  if (event->type == ADL_EVENT_NONE)
+    return status;
+
+  ADLWindow * window = NULL;
+  if (event->window)
+  {
+    void * data = (void *)event->window;
+
+    ADLLinkedListItem * item;
+    for(item = adl.windowList.head; item != NULL; item = item->next)
+    {
+      ADLWindowListItem * li = (ADLWindowListItem *)item;
+      if (ADL_GET_WINDOW_DATA(&li->window) != data)
+        continue;
+
+      event->window = &li->window;
+      window        = &li->window;
+      break;
+    }
+  }
+
+  switch(event->type)
+  {
+    case ADL_EVENT_MOUSE_MOVE:
+    case ADL_EVENT_MOUSE_DOWN:
+    case ADL_EVENT_MOUSE_UP  :
+      // fill in the relX and relY fields
+      if (!window->haveMousePos)
+      {
+        window->haveMousePos = true;
+        window->mouseX       = event->u.mouse.x;
+        window->mouseY       = event->u.mouse.y;
+        event->u.mouse.relX  = 0;
+        event->u.mouse.relY  = 0;
+        break;
+      }
+
+      event->u.mouse.relX = event->u.mouse.x - window->mouseX;
+      event->u.mouse.relY = event->u.mouse.y - window->mouseY;
+      window->mouseX      = event->u.mouse.x;
+      window->mouseY      = event->u.mouse.y;
+      break;
+
+    default:
+      break;
+  }
+
+  return status;
 }

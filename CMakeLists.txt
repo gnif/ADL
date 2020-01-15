@@ -13,6 +13,7 @@ set(SOURCES
   src/adl.c
   src/status.c
   src/logging.c
+  src/linkedlist.c
 )
 
 pkg_check_modules(XCB xcb)

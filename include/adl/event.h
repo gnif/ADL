@@ -52,18 +52,27 @@ ADLEventKeyboard;
 
 typedef enum
 {
-  ADL_MOUSE_BUTTON_LEFT   = 0x01,
-  ADL_MOUSE_BUTTON_MIDDLE = 0x02,
-  ADL_MOUSE_BUTTON_RIGHT  = 0x04,
-  ADL_MOUSE_BUTTON_SUP    = 0x08, // scoll up
-  ADL_MOUSE_BUTTON_SDOWN  = 0x10  // scroll down
+  ADL_MOUSE_BUTTON_LEFT    = 0x001,
+  ADL_MOUSE_BUTTON_MIDDLE  = 0x002,
+  ADL_MOUSE_BUTTON_RIGHT   = 0x004,
+  ADL_MOUSE_BUTTON_BACK    = 0x008,
+  ADL_MOUSE_BUTTON_FORWARD = 0x010,
+
+  // wheel events
+  ADL_MOUSE_BUTTON_WUP     = 0x020,
+  ADL_MOUSE_BUTTON_WDOWN   = 0x040,
+  ADL_MOUSE_BUTTON_WLEFT   = 0x080,
+  ADL_MOUSE_BUTTON_WRIGHT  = 0x100,
+
+  // unknown/custom buttons have this bit set
+  ADL_MOUSE_BUTTON_CUSTOM  = 0x10000
 }
 ADLMouseButton;
 
 typedef struct
 {
-  int            x;
-  int            y;
+  int x, y;
+  int relX, relY;
   ADLMouseButton buttons; // this is a bitfield
 }
 ADLEventMouse;
@@ -71,7 +80,7 @@ ADLEventMouse;
 typedef struct
 {
   ADLEventType type;
-  ADLWindow    window;
+  ADLWindow *  window;
   union
   {
     ADLEventKeyboard key;

@@ -58,7 +58,6 @@ int main()
   }
 
   /* Create a window and show it */
-  ADLWindow window;
   ADLWindowDef def =
   {
     .x = 0,
@@ -66,6 +65,7 @@ int main()
     .w = 100,
     .h = 100
   };
+  ADLWindow * window;
   if (adlWindowCreate(def, &window) != ADL_OK)
   {
     retval = -1;
@@ -109,7 +109,8 @@ int main()
         break;
 
       case ADL_EVENT_MOUSE_MOVE:
-        printf("move: %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+        printf("move: %4d %4d %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+            event.u.mouse.relX, event.u.mouse.relY,
             event.u.mouse.buttons);
         break;
 

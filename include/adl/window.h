@@ -25,6 +25,8 @@
 #ifndef _H_ADL_WINDOW
 #define _H_ADL_WINDOW
 
+#include <stdbool.h>
+
 /**
  * Parameters for a new window
  */
@@ -34,9 +36,14 @@ typedef struct
 }
 ADLWindowDef;
 
-/**
- * Opaque window reference
- */
-typedef void * ADLWindow;
+typedef struct
+{
+  int          x, y;
+  unsigned int w, h;
+
+  bool   haveMousePos;
+  int    mouseX, mouseY;
+}
+ADLWindow;
 
 #endif

@@ -36,7 +36,7 @@ typedef ADL_STATUS (*ADLPfFn)();
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);
 
-typedef ADL_STATUS (*ADLPfWindowFn)(ADLWindow window);
+typedef ADL_STATUS (*ADLPfWindowFn)(ADLWindow * window);
 
 struct ADLPlatform
 {

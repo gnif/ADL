@@ -36,6 +36,8 @@ const char * adlStatusString(const ADL_STATUS status)
     case ADL_ERR_INVALID_PLATFORM   : return "ADL_ERR_INVALID_PLATFORM";
     case ADL_ERR_PLATFORM           : return "ADL_ERR_PLATFORM";
     case ADL_ERR_NO_MEM             : return "ADL_ERR_NO_MEM";
+    case ADL_ERR_EMPTY              : return "ADL_ERR_EMPTY";
+    case ADL_ERR_FULL               : return "ADL_ERR_FULL";
   }
 
   return "BUG: Invalid or Unknown ADL_STATUS";
