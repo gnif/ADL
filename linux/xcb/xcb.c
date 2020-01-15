@@ -23,6 +23,8 @@
 */
 
 #include "adl.h"
+#include "window.h"
+
 #include "interface/adl.h"
 #include "logging.h"
 
@@ -195,7 +197,6 @@ ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 ADL_STATUS xcbWindowShow(ADLWindow * window)
 {
   xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
-  DEBUG_INFO(ADL_OK, "win: %x", win);
   xcb_map_window(this.xcb, win);
   xcb_flush(this.xcb);
   return ADL_OK;
