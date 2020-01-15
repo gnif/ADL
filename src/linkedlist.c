@@ -63,8 +63,12 @@ ADL_STATUS adlLinkedListFree(ADLLinkedList * list)
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
-  for(ADLLinkedListItem * item = list->head; item != NULL; item = item->next)
+  ADLLinkedListItem * next;
+  for(ADLLinkedListItem * item = list->head; item != NULL; item = next)
+  {
+    next = item->next;
     list->dtor(item);
+  }
 
   list->size  = 0;
   list->count = 0;
