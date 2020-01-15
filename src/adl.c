@@ -164,6 +164,16 @@ ADL_STATUS adlGetPlatformList(int * count, const char * names[])
   return ADL_OK;
 }
 
+static void windowListItemDestructor(void * item)
+{
+  ADLWindow * window = (ADLWindow *)item;
+
+  ADL_STATUS status;
+  if ((status = adl.platform->windowDestroy(window)) != ADL_OK)
+    DEBUG_ERROR(status, "windowDestroy failed");
+
+  free(window);
+}
 
 ADL_STATUS adlUsePlatform(const char * name)
 {
@@ -189,7 +199,7 @@ ADL_STATUS adlUsePlatform(const char * name)
 
   ADL_STATUS status;
   if ((status = adlLinkedListNew(sizeof(ADLWindowListItem) + sizeof(void *),
-          &adl.windowList)) != ADL_OK)
+          windowListItemDestructor, &adl.windowList)) != ADL_OK)
     return status;
 
   if ((status = adl.platform->init()) != ADL_OK)
@@ -249,12 +259,7 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window)
   if (!*window)
     return ADL_OK;
 
-  ADL_STATUS status;
-  if ((status = adl.platform->windowDestroy(*window)) != ADL_OK)
-  {
-    DEBUG_ERROR(status, "windowDestroy failed");
-    return status;
-  }
+  ADL_STATUS status = ADL_OK;
 
   ADLLinkedListItem * item;
   for(item = adl.windowList.head; item != NULL; item = item->next)
@@ -263,6 +268,7 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window)
     if (&li->window != *window)
       continue;
 
+    // platform destroy is called by the destructor
     if ((status = adlLinkedListRemove(&adl.windowList, &item, true)) != ADL_OK)
       DEBUG_BUG(status, "failed to remove window from the windowList");
     break;
