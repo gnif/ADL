@@ -136,9 +136,6 @@ int main()
 
 exit:
   printf("shutdown\n");
-
-  /* cleanup */
-  adlWindowDestroy(&window);
 err_shutdown:
   adlShutdown();
 err_exit:
