@@ -45,8 +45,6 @@ struct State
 
 typedef struct
 {
-  uintptr_t    data;
-
   xcb_window_t window;
   xcb_window_t parent;
   int transX, transY;
@@ -311,8 +309,9 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     return ADL_ERR_PLATFORM;
   }
 
+  ADL_SET_WINDOW_ID(result, window);
+
   WindowData * win = ADL_GET_WINDOW_DATA(result);
-  win->data   = window;
   win->window = window;
   win->parent = 0;
 
@@ -416,7 +415,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         break;
 
       event->type   = ADL_EVENT_CLOSE;
-      event->window = windowFindByData(e->window);
+      event->window = windowFindById(e->window);
       break;
     }
 
@@ -424,7 +423,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_SHOW;
-      event->window = windowFindByData(e->window);
+      event->window = windowFindById(e->window);
       break;
     }
 
@@ -432,7 +431,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_HIDE;
-      event->window = windowFindByData(e->window);
+      event->window = windowFindById(e->window);
       break;
     }
 
@@ -446,7 +445,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       else
         event->type = ADL_EVENT_SHOW;
 
-      event->window = windowFindByData(e->window);
+      event->window = windowFindById(e->window);
       break;
     }
 
@@ -456,7 +455,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         (xcb_configure_notify_event_t *)xevent;
 
       event->type   = ADL_EVENT_WINDOW_CHANGE;
-      event->window = windowFindByData(e->window);
+      event->window = windowFindById(e->window);
 
       /* non-generated events need translating */
       if (!generated && event->window)
@@ -480,7 +479,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_DOWN;
-      event->window         = windowFindByData(e->event);
+      event->window         = windowFindById(e->event);
       event->u.key.scancode = e->detail;
       break;
     }
@@ -489,7 +488,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
-      event->window         = windowFindByData(e->event);
+      event->window         = windowFindById(e->event);
       event->u.key.scancode = e->detail;
       break;
     }
@@ -498,7 +497,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
-      event->window    = windowFindByData(e->event);
+      event->window    = windowFindById(e->event);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
@@ -534,7 +533,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
-      event->window    = windowFindByData(e->event);
+      event->window    = windowFindById(e->event);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
@@ -559,7 +558,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
-      event->window          = windowFindByData(e->event);
+      event->window          = windowFindById(e->event);
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
       event->u.mouse.buttons = this.mouseButtonState;

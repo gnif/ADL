@@ -37,15 +37,20 @@ typedef struct
 }
 ADLWindowListItem;
 
-/* ADL always allocates sizeof(void*) extra after the ADLWindow struct for
- * Platform storage, use these macros to get and set this field */
-#define ADL_WINDOW_LIST_ITEM_SIZE \
-  (sizeof(ADLWindowListItem) + sizeof(void))
+typedef uint64_t ADLWindowId;
+
+#define ADL_WINDOW_LIST_ITEM_SIZE (sizeof(ADLWindowListItem) + sizeof(ADLWindowId))
+
+#define ADL_SET_WINDOW_ID(x, v) \
+  *(ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = v
+
+#define ADL_GET_WINDOW_ID(x) \
+  (*(ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1))
 
 #define ADL_GET_WINDOW_DATA(x) \
-  (((void *)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
+  ((void *)((ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) + 1))
 
 void windowListItemDestructor(void * item);
-ADLWindow * windowFindByData(uintptr_t data);
+ADLWindow * windowFindById(ADLWindowId id);
 
 #endif
