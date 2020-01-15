@@ -41,10 +41,7 @@ ADLWindowListItem;
   (sizeof(ADLWindowListItem) + sizeof(void))
 
 #define ADL_GET_WINDOW_DATA(x) \
-  (*((void **)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
-
-#define ADL_SET_WINDOW_DATA(x, v) \
-  *(void **)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = (v)
+  (((void *)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
 
 void windowListItemDestructor(void * item);
 ADLWindow * windowFindByData(void * data);

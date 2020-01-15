@@ -43,6 +43,12 @@ struct State
   ADLMouseButton mouseButtonState;
 };
 
+typedef struct
+{
+  xcb_window_t window;
+}
+WindowData;
+
 static struct State this;
 
 static const char * xcbErrString(int error)
@@ -261,37 +267,40 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
   updateWindowProperties(window, def);
-  ADL_SET_WINDOW_DATA(result, (void*)(uintptr_t)window);
+
+  WindowData * win = ADL_GET_WINDOW_DATA(result);
+  win->window = window;
   return ADL_OK;
 }
 
 ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
-  xcb_destroy_window(this.xcb, win);
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_destroy_window(this.xcb, data->window);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
 
 ADL_STATUS xcbWindowShow(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
-  xcb_map_window(this.xcb, win);
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_map_window(this.xcb, data->window);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
 
 ADL_STATUS xcbWindowHide(ADLWindow * window)
 {
-  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
-  xcb_unmap_window(this.xcb, win);
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_unmap_window(this.xcb, data->window);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
 
 ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
 {
-  xcb_window_t win = (xcb_window_t)(uintptr_t)ADL_GET_WINDOW_DATA(window);
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_window_t win  = data->window;
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_NAME,
     IA_XCB_ATOM_STRING, 8, strlen(title), title);
@@ -553,6 +562,7 @@ static struct ADLPlatform xcb =
   .init           = xcbInitialize,
   .deinit         = xcbDeinitialize,
   .processEvent   = xcbProcessEvent,
+  .windowDataSize = sizeof(WindowData),
   .windowCreate   = xcbWindowCreate,
   .windowDestroy  = xcbWindowDestroy,
   .windowShow     = xcbWindowShow,

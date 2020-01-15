@@ -29,6 +29,7 @@
 #include "adl/status.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef ADL_STATUS (*ADLPfFn)();
 
@@ -50,6 +51,7 @@ struct ADLPlatform
   ADLPfFn            deinit;
   ADLPfProcessEvent  processEvent;
 
+  size_t              windowDataSize;
   ADLPfWindowCreate   windowCreate;
   ADLPfWindowFn       windowDestroy;
   ADLPfWindowFn       windowShow;
