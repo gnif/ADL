@@ -140,6 +140,7 @@ ADL_STATUS adlShutdown()
 {
   ADL_INITCHECK;
 
+  adlLinkedListFree(&adl.windowList);
   return ADL_OK;
 }
 
