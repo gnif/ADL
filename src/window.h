@@ -22,51 +22,30 @@
   SOFTWARE.
 */
 
-#ifndef _H_SRC_ADL
-#define _H_SRC_ADL
+#ifndef _H_SRC_WINDOW
+#define _H_SRC_WINDOW
 
-#include "adl/window.h"
-#include "interface/adl.h"
 #include "linkedlist.h"
+#include "adl/window.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
-struct ADL
+typedef struct
 {
-  bool initDone;
+  ADLLinkedListItem item;
+  ADLWindow window;
+}
+ADLWindowListItem;
 
-  const struct ADLPlatform ** platformList;
-  int                         platformListCount;
-  int                         numPlatforms;
+/* ADL always allocates sizeof(void*) extra after the ADLWindow struct for
+ * Platform storage, use these macros to get and set this field */
+#define ADL_WINDOW_LIST_ITEM_SIZE \
+  (sizeof(ADLWindowListItem) + sizeof(void))
 
-  const struct ADLPlatform * platform;
+#define ADL_GET_WINDOW_DATA(x) \
+  (*((void **)(ADL_CHECK_TYPE(ADLWindow *, x)+1)))
 
-  ADLLinkedList windowList;
-};
+#define ADL_SET_WINDOW_DATA(x, v) \
+  *(void **)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = (v)
 
-extern struct ADL adl;
-
-#define ADL_INITCHECK \
-  if (!adl.initDone) \
-  { \
-    DEBUG_ERROR(ADL_ERR_NOT_INITIALIZED, "not initialized"); \
-    return ADL_ERR_NOT_INITIALIZED; \
-  }
-
-#define ADL_NOT_NULL_CHECK(x) \
-  if (!x) \
-  { \
-    DEBUG_ERROR(ADL_ERR_INVALID_ARGUMENT, #x " == NULL"); \
-    return ADL_ERR_INVALID_ARGUMENT; \
-  }
-
-#define ADL_CHECK_TYPE(type, x) \
-  ({ \
-    type __dummy; \
-    typeof(x) __dummy2; \
-    (void)(&__dummy == &__dummy2); \
-    (x); \
-  })
+void windowListItemDestructor(void * item);
 
 #endif

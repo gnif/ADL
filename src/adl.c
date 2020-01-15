@@ -23,6 +23,7 @@
 */
 
 #include "adl.h"
+#include "window.h"
 #include "logging.h"
 #include "linkedlist.h"
 
@@ -35,26 +36,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
-
-struct ADL
-{
-  bool initDone;
-
-  const struct ADLPlatform ** platformList;
-  int                         platformListCount;
-  int                         numPlatforms;
-
-  const struct ADLPlatform * platform;
-
-  ADLLinkedList windowList;
-};
-
-typedef struct
-{
-  ADLLinkedListItem item;
-  ADLWindow window;
-}
-ADLWindowListItem;
 
 struct ADL adl = { 0 };
 
@@ -164,17 +145,6 @@ ADL_STATUS adlGetPlatformList(int * count, const char * names[])
   return ADL_OK;
 }
 
-static void windowListItemDestructor(void * item)
-{
-  ADLWindow * window = (ADLWindow *)item;
-
-  ADL_STATUS status;
-  if ((status = adl.platform->windowDestroy(window)) != ADL_OK)
-    DEBUG_ERROR(status, "windowDestroy failed");
-
-  free(window);
-}
-
 ADL_STATUS adlUsePlatform(const char * name)
 {
   ADL_INITCHECK;
@@ -198,7 +168,7 @@ ADL_STATUS adlUsePlatform(const char * name)
   }
 
   ADL_STATUS status;
-  if ((status = adlLinkedListNew(sizeof(ADLWindowListItem) + sizeof(void *),
+  if ((status = adlLinkedListNew(ADL_WINDOW_LIST_ITEM_SIZE,
           windowListItemDestructor, &adl.windowList)) != ADL_OK)
     return status;
 
@@ -210,86 +180,6 @@ ADL_STATUS adlUsePlatform(const char * name)
 
   DEBUG_INFO(ADL_OK, "Using platform: %s", name);
   return ADL_OK;
-}
-
-ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
-{
-  ADL_INITCHECK;
-  ADL_STATUS status;
-
-  if (!result)
-  {
-    DEBUG_ERROR(ADL_ERR_INVALID_ARGUMENT, "result == NULL");
-    return ADL_ERR_INVALID_ARGUMENT;
-  }
-
-  *result = NULL;
-
-  ADLWindowListItem * item;
-  status = adlLinkedListNewItem(&adl.windowList, (ADLLinkedListItem **)&item);
-  if (status != ADL_OK)
-    return status;
-
-  ADLWindow * win = &item->window;
-
-  win->x = def.x;
-  win->y = def.y;
-  win->w = def.w;
-  win->h = def.h;
-
-  status = adl.platform->windowCreate(def, win);
-  if (status == ADL_OK && (!ADL_GET_WINDOW_DATA(win)))
-  {
-    DEBUG_BUG(ADL_ERR_PLATFORM,
-        "%s->windowCreate did not set the window data", adl.platform->name);
-
-    adlLinkedListPop(&adl.windowList, NULL);
-    return ADL_ERR_PLATFORM;
-  }
-
-  *result = win;
-  return status;
-}
-
-ADL_STATUS adlWindowDestroy(ADLWindow ** window)
-{
-  ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(window);
-
-  if (!*window)
-    return ADL_OK;
-
-  ADL_STATUS status = ADL_OK;
-
-  ADLLinkedListItem * item;
-  for(item = adl.windowList.head; item != NULL; item = item->next)
-  {
-    ADLWindowListItem * li = (ADLWindowListItem *)item;
-    if (&li->window != *window)
-      continue;
-
-    // platform destroy is called by the destructor
-    if ((status = adlLinkedListRemove(&adl.windowList, &item, true)) != ADL_OK)
-      DEBUG_BUG(status, "failed to remove window from the windowList");
-    break;
-  }
-
-  *window = NULL;
-  return status;
-}
-
-ADL_STATUS adlWindowShow(ADLWindow * window)
-{
-  ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(window);
-  return adl.platform->windowShow(window);
-}
-
-ADL_STATUS adlWindowHide(ADLWindow * window)
-{
-  ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(window);
-  return adl.platform->windowHide(window);
 }
 
 ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)

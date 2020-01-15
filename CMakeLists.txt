@@ -11,6 +11,7 @@ link_libraries(${CMAKE_DL_LIBS})
 
 set(SOURCES
   src/adl.c
+  src/window.c
   src/status.c
   src/logging.c
   src/linkedlist.c

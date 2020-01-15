@@ -25,6 +25,8 @@
 #ifndef _H_ADL_WINDOW
 #define _H_ADL_WINDOW
 
+#include "adl/status.h"
+
 #include <stdbool.h>
 
 /**
