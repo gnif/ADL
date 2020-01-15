@@ -207,7 +207,7 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
   return ADL_OK;
 }
 
-static ADL_STATUS xcbProcessEvents(ADLEvent * event)
+static ADL_STATUS xcbProcessEvent(ADLEvent * event)
 {
   xcb_generic_event_t * xevent;
   xevent = xcb_poll_for_event(this.xcb);
@@ -419,7 +419,7 @@ static struct ADLPlatform xcb =
   .test          = xcbTest,
   .init          = xcbInitialize,
   .deinit        = xcbDeinitialize,
-  .processEvents = xcbProcessEvents,
+  .processEvent  = xcbProcessEvent,
   .windowCreate  = xcbWindowCreate,
   .windowDestroy = xcbWindowDestroy,
   .windowShow    = xcbWindowShow,

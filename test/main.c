@@ -77,7 +77,7 @@ int main()
   /* Process events */
   ADLEvent event;
   ADL_STATUS status;
-  while((status = adlProcessEvents(&event)) == ADL_OK)
+  while((status = adlProcessEvent(&event)) == ADL_OK)
   {
     switch(event.type)
     {

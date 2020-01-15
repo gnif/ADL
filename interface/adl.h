@@ -32,6 +32,7 @@
 
 typedef ADL_STATUS (*ADLPfFn)();
 
+typedef ADL_STATUS (*ADLPfProcessEvent)(ADLEvent * event);
 
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);
@@ -44,7 +45,7 @@ struct ADLPlatform
   ADLPfFn            test;
   ADLPfFn            init;
   ADLPfFn            deinit;
-  ADLPfFn            processEvents;
+  ADLPfProcessEvent  processEvent;
   ADLPfWindowCreate  windowCreate;
   ADLPfWindowFn      windowDestroy;
   ADLPfWindowFn      windowShow;

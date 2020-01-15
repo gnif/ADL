@@ -88,7 +88,7 @@ ADL_STATUS adlInitialize()
       !p->test          ||
       !p->init          ||
       !p->deinit        ||
-      !p->processEvents ||
+      !p->processEvent  ||
       !p->windowCreate  ||
       !p->windowDestroy ||
       !p->windowShow    ||
@@ -286,14 +286,14 @@ ADL_STATUS adlWindowHide(ADLWindow * window)
   return adl.platform->windowHide(window);
 }
 
-ADL_STATUS adlProcessEvents(ADLEvent * event)
+ADL_STATUS adlProcessEvent(ADLEvent * event)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(event);
   ADL_STATUS status;
 
   event->type = ADL_EVENT_NONE;
-  if ((status = adl.platform->processEvents(event)) != ADL_OK)
+  if ((status = adl.platform->processEvent(event)) != ADL_OK)
     return status;
 
   if (event->type == ADL_EVENT_NONE)

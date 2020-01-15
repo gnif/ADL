@@ -34,7 +34,7 @@ ADL_STATUS adlShutdown();
 
 ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
 ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvents(ADLEvent * event);
+ADL_STATUS adlProcessEvent(ADLEvent * event);
 
 ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);
 ADL_STATUS adlWindowDestroy(ADLWindow ** window);
