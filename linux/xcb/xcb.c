@@ -354,6 +354,10 @@ static ADL_STATUS xcbProcessEvent(ADLEvent * event, void ** window)
         case 1: this.mouseButtonState |= ADL_MOUSE_BUTTON_LEFT   ; break;
         case 2: this.mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE ; break;
         case 3: this.mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT  ; break;
+        case 4: break;
+        case 5: break;
+        case 6: break;
+        case 7: break;
         case 8: this.mouseButtonState |= ADL_MOUSE_BUTTON_BACK   ; break;
         case 9: this.mouseButtonState |= ADL_MOUSE_BUTTON_FORWARD; break;
         default:

@@ -113,17 +113,17 @@ int main()
         break;
 
       case ADL_EVENT_MOUSE_DOWN:
-        printf("down: %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+        printf("down: %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.buttons);
         break;
 
       case ADL_EVENT_MOUSE_UP:
-        printf("up  : %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+        printf("up  : %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.buttons);
         break;
 
       case ADL_EVENT_MOUSE_MOVE:
-        printf("move: %4d %4d %4d %4d %u\n", event.u.mouse.x, event.u.mouse.y,
+        printf("move: %4d %4d %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.relX, event.u.mouse.relY,
             event.u.mouse.buttons);
         break;
