@@ -37,16 +37,20 @@ typedef struct _ADLLinkedListItem
 }
 ADLLinkedListItem;
 
+typedef void (* ADLLinkedListItemDtor)(void *);
+
 typedef struct
 {
-  size_t              size;
-  unsigned int        count;
-  ADLLinkedListItem * head;
-  ADLLinkedListItem * tail;
+  size_t                size;
+  unsigned int          count;
+  ADLLinkedListItemDtor dtor;
+  ADLLinkedListItem *   head;
+  ADLLinkedListItem *   tail;
 }
 ADLLinkedList;
 
-ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedList * list);
+ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedListItemDtor dtor,
+    ADLLinkedList * list);
 ADL_STATUS adlLinkedListFree(ADLLinkedList * list);
 
 ADL_STATUS adlLinkedListNewItem(ADLLinkedList * list,

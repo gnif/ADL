@@ -28,7 +28,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedList * list)
+ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedListItemDtor dtor,
+    ADLLinkedList * list)
 {
   if (!list)
   {
@@ -42,8 +43,12 @@ ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedList * list)
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
+  if (!dtor)
+    dtor = free;
+
   list->size  = itemSize;
   list->count = 0;
+  list->dtor  = dtor;
   list->head  = NULL;
   list->tail  = NULL;
 
@@ -59,7 +64,7 @@ ADL_STATUS adlLinkedListFree(ADLLinkedList * list)
   }
 
   for(ADLLinkedListItem * item = list->head; item != NULL; item = item->next)
-    free(item);
+    list->dtor(item);
 
   list->size  = 0;
   list->count = 0;
@@ -132,7 +137,7 @@ ADL_STATUS adlLinkedListPop(ADLLinkedList * list, ADLLinkedListItem ** result)
   if (result)
     *result = item;
   else
-    free(item);
+    list->dtor(item);
 
   return ADL_OK;
 }
@@ -158,7 +163,7 @@ ADL_STATUS adlLinkedListRemove(ADLLinkedList * list, ADLLinkedListItem ** item,
 
   if (freeItem)
   {
-    free(i);
+    list->dtor(i);
     *item = NULL;
   }
 
