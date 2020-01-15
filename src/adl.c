@@ -292,7 +292,7 @@ ADL_STATUS adlWindowHide(ADLWindow * window)
   return adl.platform->windowHide(window);
 }
 
-ADL_STATUS adlProcessEvent(ADLEvent * event)
+ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(event);
@@ -302,7 +302,8 @@ ADL_STATUS adlProcessEvent(ADLEvent * event)
   event->window = NULL;
 
   void * windowData = NULL;
-  if ((status = adl.platform->processEvent(event, &windowData)) != ADL_OK)
+  if ((status = adl.platform->processEvent(timeout, event,
+          &windowData)) != ADL_OK)
     return status;
 
   if (event->type == ADL_EVENT_NONE)

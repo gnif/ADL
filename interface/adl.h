@@ -32,7 +32,8 @@
 
 typedef ADL_STATUS (*ADLPfFn)();
 
-typedef ADL_STATUS (*ADLPfProcessEvent)(ADLEvent * event, void ** window);
+typedef ADL_STATUS (*ADLPfProcessEvent)
+  (int timeout, ADLEvent * event, void ** window);
 
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);

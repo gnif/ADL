@@ -34,6 +34,7 @@
 struct State
 {
   xcb_connection_t * xcb;
+  int                fd;
   xcb_screen_t     * screen;
 
   xcb_atom_t wmProtocols;
@@ -122,6 +123,7 @@ static ADL_STATUS xcbInitialize()
   if ((status = getAtom("WM_DELETE_WINDOW", &this.wmDeleteWindow)) != ADL_OK)
     goto err_disconnect;
 
+  this.fd = xcb_get_file_descriptor(this.xcb);
   return status;
 
 err_disconnect:
@@ -207,10 +209,31 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
   return ADL_OK;
 }
 
-static ADL_STATUS xcbProcessEvent(ADLEvent * event, void ** window)
+static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event, void ** window)
 {
   xcb_generic_event_t * xevent;
-  xevent = xcb_poll_for_event(this.xcb);
+
+  if (timeout < 0)
+    xevent = xcb_wait_for_event(this.xcb);
+  else
+  {
+    if (timeout > 0)
+    {
+      fd_set fds;
+      FD_ZERO(&fds);
+      FD_SET (this.fd, &fds);
+      struct timeval tv =
+      {
+        .tv_sec  = timeout / 1000,
+        .tv_usec = (timeout % 1000) * 1000
+      };
+      if (select(this.fd + 1, &fds, NULL, NULL, &tv) == 0)
+        return ADL_OK;
+    }
+
+    xevent = xcb_poll_for_event(this.xcb);
+  }
+
   if (!xevent)
     return ADL_OK;
 
