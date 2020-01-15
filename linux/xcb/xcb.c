@@ -263,13 +263,32 @@ static ADL_STATUS xcbProcessEvents(ADLEvent * event)
 
     case XCB_CONFIGURE_NOTIFY:
     {
-      /* undocumented as far as I can tell. non-generated X messages should be
-       * ignored as the details in them for window move events are incorrect */
-      if (!generated)
-        break;
-
       xcb_configure_notify_event_t * e =
         (xcb_configure_notify_event_t *)xevent;
+
+      /* non-generated events need translating */
+      if (!generated)
+      {
+        xcb_translate_coordinates_cookie_t c =
+          xcb_translate_coordinates(this.xcb, e->window, this.screen->root,
+              e->x, e->y);
+
+        xcb_generic_error_t *error;
+        xcb_translate_coordinates_reply_t *r =
+          xcb_translate_coordinates_reply(this.xcb, c, &error);
+
+        if (error)
+        {
+          DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_translate_coordinates failed: code=%d, res=%d",
+            error->error_code, error->resource_id);
+          free(error);
+          return ADL_ERR_PLATFORM;
+        }
+
+        e->x = r->dst_x;
+        e->y = r->dst_y;
+        free(r);
+      }
 
       event->type    = ADL_EVENT_WINDOW_CHANGE;
       event->window  = (ADLWindow *)(uintptr_t)e->window;
