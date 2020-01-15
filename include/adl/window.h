@@ -31,22 +31,54 @@
 
 typedef enum
 {
-  ADL_WINDOW_FLAG_VCETNER    = 0x01,
-  ADL_WINDOW_FLAG_HCENTER    = 0x02,
-  ADL_WINDOW_FLAG_BORDERLESS = 0x04,
-  ADL_WINDOW_FLAG_FULLSCREEN = 0x08
+  ADL_WINDOW_FLAG_CETNERV      = 0x0001,
+  ADL_WINDOW_FLAG_CENTERH      = 0x0002,
+  ADL_WINDOW_FLAG_MODAL        = 0x0004,
+  ADL_WINDOW_FLAG_STICKY       = 0x0008,
+  ADL_WINDOW_FLAG_MAXV         = 0x0010,
+  ADL_WINDOW_FLAG_MAXH         = 0x0020,
+  ADL_WINDOW_FLAG_SHADED       = 0x0040,
+  ADL_WINDOW_FLAG_SKIP_TASKBAR = 0x0080,
+  ADL_WINDOW_FLAG_SKIP_PAGER   = 0x0100,
+  ADL_WINDOW_FLAG_HIDDEN       = 0x0200,
+  ADL_WINDOW_FLAG_FULLSCREEN   = 0x0400,
+  ADL_WINDOW_FLAG_ABOVE        = 0x0800,
+  ADL_WINDOW_FLAG_BELOW        = 0x1000,
+  ADL_WINDOW_FLAG_ATTENTION    = 0x2000,
+  ADL_WINDOW_FLAG_FOCUSED      = 0x4000
 }
 ADLWindowFlag;
+
+typedef enum
+{
+  ADL_WINDOW_TYPE_DESKTOP,
+  ADL_WINDOW_TYPE_DOCK,
+  ADL_WINDOW_TYPE_TOOLBAR,
+  ADL_WINDOW_TYPE_MENU,
+  ADL_WINDOW_TYPE_UTILITY,
+  ADL_WINDOW_TYPE_SPLASH,
+  ADL_WINDOW_TYPE_DIALOG,
+  ADL_WINDOW_TYPE_DROPDOWN,
+  ADL_WINDOW_TYPE_POPUP,
+  ADL_WINDOW_TYPE_TOOLTIP,
+  ADL_WINDOW_TYPE_NOTIFICATION,
+  ADL_WINDOW_TYPE_COMBO,
+  ADL_WINDOW_TYPE_DND,
+  ADL_WINDOW_TYPE_NORMAL
+}
+ADLWindowType;
 
 /**
  * Parameters for a new window
  */
 typedef struct
 {
+  const char *  title;
+  ADLWindowType type;
+  ADLWindowFlag flags; // this is a bitfield
+  bool          borderless;
   int           x, y;
   int           w, h;
-  ADLWindowFlag flags;
-  const char *  title;
 }
 ADLWindowDef;
 

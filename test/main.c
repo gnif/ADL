@@ -60,10 +60,12 @@ int main()
   /* Create a window and show it */
   ADLWindowDef def =
   {
+    .title       = "ADL Test",
+    .type        = ADL_WINDOW_TYPE_DIALOG,
+    .flags       = 0,
+    .borderless  = false,
     .x = 0  , .y = 0  ,
     .w = 200, .h = 200,
-
-    .title = "ADL Test"
   };
   ADLWindow * window;
   if (adlWindowCreate(def, &window) != ADL_OK)

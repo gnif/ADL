@@ -66,26 +66,87 @@ static const char * xcbErrString(int error)
    }
 }
 
-static ADL_STATUS getAtom(const char * name, xcb_atom_t * atom)
+static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props)
 {
-  assert(atom);
-
-  xcb_generic_error_t *     error;
-  xcb_intern_atom_cookie_t  c = xcb_intern_atom(this.xcb, 1, strlen(name), name);
-  xcb_intern_atom_reply_t * r = xcb_intern_atom_reply(this.xcb, c, &error);
-
-  if (error)
   {
-    DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_intern_atom failed: code=%d, res=%d",
-      error->error_code, error->resource_id);
-    free(error);
-    return ADL_ERR_PLATFORM;
+#define SET_FLAG(x, y) \
+    if ((props.flags & ADL_WINDOW_FLAG_ ##x) && haveAtom(IA_NET_WM_STATE_ ##y)) \
+      state[stateCount++] = getAtom(IA_NET_WM_STATE_ ##y);
+
+    xcb_atom_t state[13];
+    int stateCount = 0;
+
+    SET_FLAG(MODAL       , MODAL            )
+    SET_FLAG(STICKY      , STICKY           )
+    SET_FLAG(MAXV        , MAXIMIZED_VERT   )
+    SET_FLAG(MAXH        , MAXIMIZED_HORZ   )
+    SET_FLAG(SHADED      , SHADED           )
+    SET_FLAG(SKIP_TASKBAR, SKIP_TASKBAR     )
+    SET_FLAG(SKIP_PAGER  , SKIP_PAGER       )
+    SET_FLAG(HIDDEN      , HIDDEN           )
+    SET_FLAG(FULLSCREEN  , FULLSCREEN       )
+    SET_FLAG(ABOVE       , ABOVE            )
+    SET_FLAG(BELOW       , BELOW            )
+    SET_FLAG(ATTENTION   , DEMANDS_ATTENTION)
+    SET_FLAG(FOCUSED     , FOCUSED          )
+
+    if (stateCount)
+      changeProperty(XCB_PROP_MODE_REPLACE, window, IA_NET_WM_STATE,
+        IA_XCB_ATOM_ATOM, 32, stateCount, state);
+
+#undef SET_FLAG
   }
 
-  *atom = r->atom;
-  free(r);
+  {
+#define SET_TYPE(x, y) \
+    case ADL_WINDOW_TYPE_ ##x: \
+      type[typeCount++] = getAtom(IA_NET_WM_WINDOW_TYPE_ ##y); \
+      break;
 
-  return ADL_OK;
+    xcb_atom_t type[3];
+    int typeCount = 0;
+
+    switch(props.type)
+    {
+      SET_TYPE(DESKTOP     , DESKTOP      );
+      SET_TYPE(DOCK        , DOCK         );
+      SET_TYPE(TOOLBAR     , TOOLBAR      );
+      SET_TYPE(MENU        , MENU         );
+      SET_TYPE(UTILITY     , UTILITY      );
+      SET_TYPE(SPLASH      , SPLASH       );
+      SET_TYPE(DIALOG      , DIALOG       );
+      SET_TYPE(DROPDOWN    , DROPDOWN_MENU);
+      SET_TYPE(POPUP       , POPUP_MENU   );
+      SET_TYPE(TOOLTIP     , TOOLTIP      );
+      SET_TYPE(NOTIFICATION, NOTIFICATION );
+      SET_TYPE(COMBO       , COMBO        );
+      SET_TYPE(DND         , DND          );
+
+      case ADL_WINDOW_TYPE_NORMAL:
+        break;
+    }
+
+    if (props.borderless)
+    {
+      if (haveAtom(IA_KDE_NET_WM_WINDOW_TYPE_OVERRIDE))
+        type[typeCount++] = getAtom(IA_KDE_NET_WM_WINDOW_TYPE_OVERRIDE);
+    }
+
+    // normal is always appended
+    type[typeCount++] = getAtom(IA_NET_WM_WINDOW_TYPE_NORMAL);
+
+    changeProperty(XCB_PROP_MODE_REPLACE, window, IA_NET_WM_WINDOW_TYPE,
+        IA_XCB_ATOM_ATOM, 32, typeCount, type);
+
+#undef SET_TYPE
+  }
+
+  if (haveAtom(IA_MOTIF_WM_HINTS))
+  {
+    struct MotifHints hints = {.flags = props.borderless ? 2 : 0};
+    changeProperty(XCB_PROP_MODE_REPLACE, window, IA_MOTIF_WM_HINTS,
+        IA_XCB_ATOM_INTEGER, 32, 5, &hints);
+  }
 }
 
 static ADL_STATUS xcbTest()
@@ -124,9 +185,22 @@ static ADL_STATUS xcbInitialize()
     if (internAtom[i].atom)
       continue;
 
-    /* try and fetch the atoms for values that are not known */
-    if ((status = getAtom(internAtom[i].name, &internAtom[i].atom)) != ADL_OK)
+    xcb_generic_error_t * error;
+    xcb_intern_atom_cookie_t c = xcb_intern_atom(this.xcb, 1,
+        strlen(internAtom[i].name), internAtom[i].name);
+    xcb_intern_atom_reply_t * r = xcb_intern_atom_reply(this.xcb, c, &error);
+
+    if (error)
+    {
+      DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_intern_atom failed: code=%d, res=%d",
+        error->error_code, error->resource_id);
+      free(error);
+      status = ADL_ERR_PLATFORM;
       goto err_disconnect;
+    }
+
+    internAtom[i].atom = r->atom;
+    free(r);
   }
 
   this.fd = xcb_get_file_descriptor(this.xcb);
@@ -186,6 +260,7 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
+  updateWindowProperties(window, def);
   ADL_SET_WINDOW_DATA(result, (void*)(uintptr_t)window);
   return ADL_OK;
 }
