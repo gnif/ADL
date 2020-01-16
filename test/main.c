@@ -81,6 +81,7 @@ int main()
   /* Process events */
   ADLEvent event;
   ADL_STATUS status;
+  bool grabMode = false;
   while((status = adlProcessEvent(100, &event)) == ADL_OK)
   {
     switch(event.type)
@@ -108,6 +109,14 @@ int main()
 
       case ADL_EVENT_KEY_DOWN:
         printf("key down: %u\n", event.u.key.scancode);
+        // scroll lock key
+        if (event.u.key.scancode == 78)
+        {
+          grabMode = !grabMode;
+          adlWindowSetGrab    (window, grabMode);
+          adlWindowSetRelative(window, grabMode);
+          printf("grab is %sabled\n", grabMode ? "en" : "dis");
+        }
         break;
 
       case ADL_EVENT_KEY_UP:
