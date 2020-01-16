@@ -1,4 +1,4 @@
-#include "window.h"
+#include "image.h"
 #include "src/image.h"
 
 ADL_STATUS xcbImageGetSupported(ADLImageBackend * result)

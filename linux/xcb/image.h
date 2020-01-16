@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef _H_LINUX_XCB_WINDOW
-#define _H_LINUX_XCB_WINDOW
+#ifndef _H_LINUX_XCB_IMAGE
+#define _H_LINUX_XCB_IMAGE
 
 #include "adl/status.h"
 #include "adl/image.h"

@@ -22,13 +22,13 @@
   SOFTWARE.
 */
 
-#include "adl.h"
+#include "src/adl.h"
 #include "src/window.h"
-
 #include "interface/adl.h"
+
 #include "logging.h"
 #include "atoms.h"
-#include "window.h"
+#include "image.h"
 
 #include <xcb/xcb.h>
 

@@ -22,7 +22,7 @@ pkg_check_modules(XCB xcb)
 if(XCB_FOUND)  
   list(APPEND SOURCES
     linux/xcb/xcb.c
-    linux/xcb/window.c)
+    linux/xcb/image.c)
   include_directories(${XCB_INCLUDE_DIRS})
   link_libraries(${XCB_LIBRARIES})
 endif(XCB_FOUND)
