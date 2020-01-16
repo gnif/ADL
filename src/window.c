@@ -144,3 +144,17 @@ ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title)
   ADL_NOT_NULL_CHECK(window);
   return adl.platform->windowSetTitle(window, title);
 }
+
+ADL_STATUS adlWindowSetGrab(ADLWindow * window, bool enable)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+  return adl.platform->windowSetGrab(window, enable);
+}
+
+ADL_STATUS adlWindowSetRelative(ADLWindow * window, bool enable)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+  return adl.platform->windowSetRelative(window, enable);
+}

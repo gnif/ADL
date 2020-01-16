@@ -41,7 +41,8 @@ typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
 
 typedef ADL_STATUS (*ADLPfWindow)(ADLWindow * window);
 
-typedef ADL_STATUS (*ADLPfWindowSetStr)(ADLWindow * window, const char * str);
+typedef ADL_STATUS (*ADLPfWindowSetStr )(ADLWindow * window, const char * str);
+typedef ADL_STATUS (*ADLPfWindowSetBool)(ADLWindow * window, bool enable     );
 
 #define ADL_PLATFORM_FIELDS \
   ADL_FIELD(const char *     , name        ) \
@@ -57,7 +58,9 @@ typedef ADL_STATUS (*ADLPfWindowSetStr)(ADLWindow * window, const char * str);
   ADL_FIELD(ADLPfWindow       , windowShow        ) \
   ADL_FIELD(ADLPfWindow       , windowHide        ) \
   ADL_FIELD(ADLPfWindowSetStr , windowSetTitle    ) \
-  ADL_FIELD(ADLPfWindowSetStr , windowSetClassName)
+  ADL_FIELD(ADLPfWindowSetStr , windowSetClassName) \
+  ADL_FIELD(ADLPfWindowSetBool, windowSetGrab     ) \
+  ADL_FIELD(ADLPfWindowSetBool, windowSetRelative )
 
 #define ADL_FIELD(type, name) \
   type name;
