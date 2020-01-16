@@ -31,7 +31,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef ADL_STATUS (*ADLPfFn)(void);
+typedef ADL_STATUS (*ADLPf)(void);
 
 typedef ADL_STATUS (*ADLPfProcessEvent)
   (int timeout, ADLEvent * event);
@@ -39,26 +39,26 @@ typedef ADL_STATUS (*ADLPfProcessEvent)
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);
 
-typedef ADL_STATUS (*ADLPfWindowFn)(ADLWindow * window);
+typedef ADL_STATUS (*ADLPfWindow)(ADLWindow * window);
 
-typedef ADL_STATUS (*ADLPfWindowSetStrFn)(ADLWindow * window, const char * str);
+typedef ADL_STATUS (*ADLPfWindowSetStr)(ADLWindow * window, const char * str);
 
 struct ADLPlatform
 {
-  const char *       name;
-  ADLPfFn            test;
-  ADLPfFn            init;
-  ADLPfFn            deinit;
-  ADLPfProcessEvent  processEvent;
-  ADLPfFn            flush;
+  const char *      name;
+  ADLPf             test;
+  ADLPf             init;
+  ADLPf             deinit;
+  ADLPfProcessEvent processEvent;
+  ADLPf             flush;
 
-  size_t              windowDataSize;
-  ADLPfWindowCreate   windowCreate;
-  ADLPfWindowFn       windowDestroy;
-  ADLPfWindowFn       windowShow;
-  ADLPfWindowFn       windowHide;
-  ADLPfWindowSetStrFn windowSetTitle;
-  ADLPfWindowSetStrFn windowSetClassName;
+  size_t            windowDataSize;
+  ADLPfWindowCreate windowCreate;
+  ADLPfWindow       windowDestroy;
+  ADLPfWindow       windowShow;
+  ADLPfWindow       windowHide;
+  ADLPfWindowSetStr windowSetTitle;
+  ADLPfWindowSetStr windowSetClassName;
 };
 
 #define adl_platform(x) \
