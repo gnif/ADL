@@ -208,8 +208,7 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
   ADL_NOT_NULL_CHECK(event);
   ADL_STATUS status;
 
-  event->type   = ADL_EVENT_NONE;
-  event->window = NULL;
+  memset(event, 0, sizeof(ADLEvent));
 
   if ((status = adl.platform->processEvent(timeout, event)) != ADL_OK)
     return status;
@@ -265,8 +264,24 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
 
       event->u.mouse.relX = event->u.mouse.x - window->mouseX;
       event->u.mouse.relY = event->u.mouse.y - window->mouseY;
-      window->mouseX      = event->u.mouse.x;
-      window->mouseY      = event->u.mouse.y;
+
+      // if the mouse was warped null it out
+      if (event->u.mouse.warp)
+      {
+        event->u.mouse.relX -= event->u.mouse.warpX;
+        event->u.mouse.relY -= event->u.mouse.warpY;
+      }
+
+      // if there has been no change, swallow the event
+      if (event->type == ADL_EVENT_MOUSE_MOVE &&
+          event->u.mouse.relX   == 0 &&
+          event->u.mouse.relY   == 0 &&
+          event->u.mouse.x      == window->mouseX &&
+          event->u.mouse.y      == window->mouseY)
+        event->type = ADL_EVENT_NONE;
+
+      window->mouseX = event->u.mouse.x;
+      window->mouseY = event->u.mouse.y;
       break;
 
     case ADL_EVENT_WINDOW_CHANGE:

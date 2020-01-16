@@ -80,9 +80,17 @@ ADLMouseButton;
 
 typedef struct
 {
-  int x, y;
-  int relX, relY;
-  ADLMouseButton buttons; // this is a bitfield
+  // current mouse position and relative offset since last event
+  int  x    , y;
+  int  relX , relY;
+
+  // true if the mouse was warped (relative mode)
+  bool warp;
+  // how far it was warped
+  int  warpX, warpY;
+
+  // bitfield of the held/down mouse buttons
+  ADLMouseButton buttons;
 }
 ADLEventMouse;
 

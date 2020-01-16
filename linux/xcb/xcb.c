@@ -48,7 +48,17 @@ typedef struct
 {
   xcb_window_t window;
   xcb_window_t parent;
+  uint16_t     eventMask;
   int          transX, transY;
+  bool         grabbed, relative;
+
+  // window position & size
+  int x, y, w, h;
+
+  // cursor state information
+  bool warping;
+  int  warpMidX, warpMidY;
+  int  warpX   , warpY   ;
 }
 WindowData;
 
@@ -298,15 +308,18 @@ static ADL_STATUS xcbDeinitialize()
 
 ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 {
-  uint32_t values[3] =
-  {
-    this.screen->white_pixel,
-    XCB_GRAVITY_STATIC,
+  const uint32_t eventMask =
     XCB_EVENT_MASK_EXPOSURE         |
     XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_VISIBILITY_CHANGE |
     XCB_EVENT_MASK_KEY_PRESS        | XCB_EVENT_MASK_KEY_RELEASE       |
     XCB_EVENT_MASK_BUTTON_PRESS     | XCB_EVENT_MASK_BUTTON_RELEASE    |
-    XCB_EVENT_MASK_POINTER_MOTION
+    XCB_EVENT_MASK_POINTER_MOTION;
+
+  uint32_t values[3] =
+  {
+    this.screen->white_pixel,
+    XCB_GRAVITY_STATIC,
+    eventMask
   };
 
   if (def.flags & ADL_WINDOW_FLAG_CENTER)
@@ -340,6 +353,7 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   /* set the window's ID and get the window data */
   ADL_SET_WINDOW_ID(result, window);
   WindowData * data = ADL_GET_WINDOW_DATA(result);
+  data->eventMask   = eventMask;
 
   /* setup the local window data */
   memset(data, 0, sizeof(WindowData));
@@ -420,6 +434,60 @@ ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className)
   changeProperty(XCB_PROP_MODE_APPEND, win, IA_XCB_ATOM_WM_CLASS,
     IA_XCB_ATOM_STRING, 8, strlen(className) + 1, className);
 
+  return ADL_OK;
+}
+
+ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_window_t win  = data->window;
+
+  if (data->grabbed == enable)
+    return ADL_OK;
+
+  if (enable)
+  {
+    xcb_grab_pointer_cookie_t c =
+      xcb_grab_pointer(this.xcb, 1, win,
+        data->eventMask, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, win, XCB_NONE,
+        XCB_TIME_CURRENT_TIME);
+
+    xcb_grab_pointer_reply_t *reply;
+    if ((reply = xcb_grab_pointer_reply(this.xcb, c, NULL)))
+    {
+      if (reply->status != XCB_GRAB_STATUS_SUCCESS)
+      {
+        DEBUG_ERROR(ADL_ERR_PLATFORM, "failed to grab the pointer");
+        free(reply);
+        return ADL_ERR_PLATFORM;
+      }
+      free(reply);
+    }
+  }
+  else
+  {
+    xcb_void_cookie_t c =
+      xcb_ungrab_pointer_checked(this.xcb, XCB_TIME_CURRENT_TIME);
+
+    xcb_generic_error_t *error;
+    if ((error = xcb_request_check(this.xcb, c)))
+    {
+      DEBUG_ERROR(ADL_ERR_PLATFORM, "failed to un-grab the pointer");
+      free(error);
+      return ADL_ERR_PLATFORM;
+    }
+  }
+
+  data->grabbed = enable;
+  return ADL_OK;
+}
+
+ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  if (data->relative == enable)
+    return ADL_OK;
+  data->relative = enable;
   return ADL_OK;
 }
 
@@ -522,6 +590,12 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       event->u.win.y = e->y;
       event->u.win.w = e->width;
       event->u.win.h = e->height;
+
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
+      data->x = e->x;
+      data->y = e->y;
+      data->w = e->width;
+      data->h = e->height;
       break;
     }
 
@@ -612,6 +686,55 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
       event->u.mouse.buttons = this.mouseButtonState;
+
+      /* check for relative mode */
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
+      if (data->relative)
+      {
+        /* waiting for the warp to complete */
+        if (data->warping)
+        {
+          /* if the warp completed */
+          if (e->event_x == data->warpMidX && e->event_y == data->warpMidY)
+          {
+            /* pass back the warp details for ADL to figure out */
+            event->u.mouse.warp  = true;
+            event->u.mouse.warpX = e->event_x - data->warpX;
+            event->u.mouse.warpY = e->event_y - data->warpY;
+            data->warping        = false;
+          }
+          else
+          {
+            data->warpX = e->event_x;
+            data->warpY = e->event_y;
+          }
+        }
+        else
+        {
+          const int midX = data->w >> 1;
+          const int midY = data->h >> 1;
+          const int offX = midX - e->event_x;
+          const int offY = midY - e->event_y;
+
+          /* check if we hit the warp threshold */
+          if (abs(offX) > 10 || abs(offY) > 10)
+          {
+            data->warping  = true;
+            data->warpMidX = midX;
+            data->warpMidY = midY;
+            data->warpX    = e->event_x;
+            data->warpY    = e->event_y;
+            xcb_warp_pointer(
+              this.xcb,
+              XCB_NONE,
+              data->window,
+              0, 0, 0, 0,
+              midX, midY
+            );
+            xcb_flush(this.xcb);
+          }
+        }
+      }
       break;
     }
   }
@@ -634,13 +757,16 @@ static struct ADLPlatform xcb =
   .deinit             = xcbDeinitialize,
   .processEvent       = xcbProcessEvent,
   .flush              = xcbFlush,
+
   .windowDataSize     = sizeof(WindowData),
   .windowCreate       = xcbWindowCreate,
   .windowDestroy      = xcbWindowDestroy,
   .windowShow         = xcbWindowShow,
   .windowHide         = xcbWindowHide,
   .windowSetTitle     = xcbWindowSetTitle,
-  .windowSetClassName = xcbWindowSetClassName
+  .windowSetClassName = xcbWindowSetClassName,
+  .windowSetGrab      = xcbWindowSetGrab,
+  .windowSetRelative  = xcbWindowSetRelative
 };
 
 adl_platform(xcb);

@@ -88,8 +88,8 @@ typedef struct
   unsigned int w, h;
   bool         visible;
 
-  bool   haveMousePos;
-  int    mouseX, mouseY;
+  bool haveMousePos;
+  int  mouseX, mouseY;
 }
 ADLWindow;
 
