@@ -188,7 +188,7 @@ ADL_STATUS adlUsePlatform(const char * name)
 
   ADL_STATUS status;
   if ((status = adlLinkedListNew(
-          ADL_WINDOW_LIST_ITEM_SIZE + adl.platform->windowDataSize,
+          sizeof(ADLWindowListItem) + adl.platform->windowDataSize,
           windowListItemDestructor, &adl.windowList)) != ADL_OK)
     return status;
 

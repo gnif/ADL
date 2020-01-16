@@ -42,9 +42,6 @@ typedef struct
 }
 ADLWindowListItem;
 
-#define ADL_WINDOW_LIST_ITEM_SIZE \
-  (sizeof(ADLWindowListItem))
-
 #define ADL_WINDOW_GET_LIST_ITEM(x) \
   ((ADLWindowListItem *)(((uint8_t*)ADL_CHECK_TYPE(ADLWindow *, x)) - \
      offsetof(ADLWindowListItem, window)))

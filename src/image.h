@@ -41,9 +41,6 @@ typedef struct
 }
 ADLImageListItem;
 
-#define ADL_IMAGE_LIST_ITEM_SIZE \
-  (sizeof(ADLImageListItem))
-
 #define ADL_IMAGE_GET_LIST_ITEM(x) \
   ((ADLImageListItem *)(((uint8_t*)ADL_CHECK_TYPE(ADLImage *, x)) - \
      offsetof(ADLImageListItem, image)))

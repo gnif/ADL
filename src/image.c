@@ -104,19 +104,9 @@ ADL_STATUS adlImageDestroy(ADLImage ** image)
 
   ADL_STATUS status = ADL_OK;
 
-  ADLLinkedList     * ll = ADL_GET_IMAGE_LIST(*image);
-  ADLLinkedListItem * item;
-  for(item = ll->head; item != NULL; item = item->next)
-  {
-    ADLImageListItem * li = (ADLImageListItem *)item;
-    if (&li->image != *image)
-      continue;
-
-    // platform destroy is called by the destructor
-    if ((status = adlLinkedListRemove(ll, &item, true)) != ADL_OK)
-      DEBUG_BUG(status, "failed to remove image from the imageList");
-    break;
-  }
+  ADLLinkedList    * ll = ADL_GET_IMAGE_LIST(*image);
+  ADLImageListItem * li = ADL_IMAGE_GET_LIST_ITEM(*image);
+  adlLinkedListRemove(ll, (ADLLinkedListItem **)&li, true);
 
   *image = NULL;
   return status;

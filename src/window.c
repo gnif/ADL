@@ -75,7 +75,7 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
 
   /* initialize the image list */
   if ((status = adlLinkedListNew(
-          ADL_IMAGE_LIST_ITEM_SIZE + adl.platform->imageDataSize,
+          sizeof(ADLImageListItem) + adl.platform->imageDataSize,
           imageListItemDestructor, &item->imageList)) != ADL_OK)
   {
     adlLinkedListPop(&adl.windowList, NULL);
@@ -111,22 +111,11 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window)
   if (!*window)
     return ADL_OK;
 
-  ADL_STATUS status = ADL_OK;
-  ADLLinkedListItem * item;
-  for(item = adl.windowList.head; item != NULL; item = item->next)
-  {
-    ADLWindowListItem * li = (ADLWindowListItem *)item;
-    if (&li->window != *window)
-      continue;
-
-    // platform destroy is called by the destructor
-    if ((status = adlLinkedListRemove(&adl.windowList, &item, true)) != ADL_OK)
-      DEBUG_BUG(status, "failed to remove window from the windowList");
-    break;
-  }
+  ADLWindowListItem * li = ADL_WINDOW_GET_LIST_ITEM(*window);
+  adlLinkedListRemove(&adl.windowList, (ADLLinkedListItem **)&li, true);
 
   *window = NULL;
-  return status;
+  return ADL_OK;
 }
 
 ADL_STATUS adlWindowShow(ADLWindow * window)

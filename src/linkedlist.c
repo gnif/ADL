@@ -37,9 +37,9 @@ ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedListItemDtor dtor,
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
-  if (itemSize == 0)
+  if (itemSize < sizeof(ADLLinkedListItem))
   {
-    DEBUG_BUG(ADL_ERR_INVALID_ARGUMENT, "itemSize == 0");
+    DEBUG_BUG(ADL_ERR_INVALID_ARGUMENT, "itemSize < sizeof(ADLLinkedListItem)");
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
