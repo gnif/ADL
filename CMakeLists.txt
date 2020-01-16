@@ -12,14 +12,17 @@ link_libraries(${CMAKE_DL_LIBS})
 set(SOURCES
   src/adl.c
   src/window.c
-  src/status.c
+  src/image.c
+  src/status.c  
   src/logging.c
   src/linkedlist.c
 )
 
 pkg_check_modules(XCB xcb)
-if(XCB_FOUND)	
-  list(APPEND SOURCES linux/xcb/xcb.c)
+if(XCB_FOUND)  
+  list(APPEND SOURCES
+    linux/xcb/xcb.c
+    linux/xcb/window.c)
   include_directories(${XCB_INCLUDE_DIRS})
   link_libraries(${XCB_LIBRARIES})
 endif(XCB_FOUND)
@@ -40,9 +43,8 @@ include_directories(${PROJECT_TOP})
 add_library(${TARGET_NAME} OBJECT ${SOURCES})
 #target_compile_options(${TARGET_NAME} PUBLIC -Wl,-r)
 target_include_directories(${TARGET_NAME}
-	INTERFACE
-		include
-	PRIVATE
-		src
+  INTERFACE
+    include
+  PRIVATE
+    src
 )
-

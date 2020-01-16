@@ -31,18 +31,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+/* platform functions */
 typedef ADL_STATUS (*ADLPf)(void);
-
 typedef ADL_STATUS (*ADLPfProcessEvent)
   (int timeout, ADLEvent * event);
 
+/* window functions */
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);
-
 typedef ADL_STATUS (*ADLPfWindow)(ADLWindow * window);
+typedef ADL_STATUS (*ADLPfWindowSetStr  )(ADLWindow * window, const char * str);
+typedef ADL_STATUS (*ADLPfWindowSetBool )(ADLWindow * window, bool enable     );
 
-typedef ADL_STATUS (*ADLPfWindowSetStr )(ADLWindow * window, const char * str);
-typedef ADL_STATUS (*ADLPfWindowSetBool)(ADLWindow * window, bool enable     );
+/* image functions */
+typedef ADL_STATUS (*ADLPfImageGetSupported)(ADLImageBackend * result);
+typedef ADL_STATUS (*ADLPfImageCreate      )(ADLWindow * window,
+    const ADLImageDef def, ADLImage * result);
+typedef ADL_STATUS (*ADLPfImage            )(ADLImage * result);
 
 #define ADL_PLATFORM_FIELDS \
   ADL_FIELD(const char *     , name        ) \
@@ -60,7 +65,13 @@ typedef ADL_STATUS (*ADLPfWindowSetBool)(ADLWindow * window, bool enable     );
   ADL_FIELD(ADLPfWindowSetStr , windowSetTitle    ) \
   ADL_FIELD(ADLPfWindowSetStr , windowSetClassName) \
   ADL_FIELD(ADLPfWindowSetBool, windowSetGrab     ) \
-  ADL_FIELD(ADLPfWindowSetBool, windowSetRelative )
+  ADL_FIELD(ADLPfWindowSetBool, windowSetRelative ) \
+  \
+  ADL_FIELD(size_t                , imageDataSize    ) \
+  ADL_FIELD(ADLPfImageGetSupported, imageGetSupported) \
+  ADL_FIELD(ADLPfImageCreate      , imageCreate      ) \
+  ADL_FIELD(ADLPfImage            , imageDestroy     ) \
+  ADL_FIELD(ADLPfImage            , imageUpdate      )
 
 #define ADL_FIELD(type, name) \
   type name;

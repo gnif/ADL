@@ -30,25 +30,36 @@
 
 #include <stdint.h>
 
+typedef uint64_t ADLWindowId;
+
 typedef struct
 {
   ADLLinkedListItem item;
-  ADLWindow window;
+
+  ADLWindowId       id;
+  ADLWindow         window;
+  ADLLinkedList     imageList;
 }
 ADLWindowListItem;
 
-typedef uint64_t ADLWindowId;
+#define ADL_WINDOW_LIST_ITEM_SIZE \
+  (sizeof(ADLWindowListItem))
 
-#define ADL_WINDOW_LIST_ITEM_SIZE (sizeof(ADLWindowListItem) + sizeof(ADLWindowId))
+#define ADL_WINDOW_GET_LIST_ITEM(x) \
+  ((ADLWindowListItem *)((uint8_t*)(ADL_CHECK_TYPE(ADLWindow *, x)) - \
+     offsetof(ADLWindowListItem, window)))
 
 #define ADL_SET_WINDOW_ID(x, v) \
-  *(ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) = v
+  ADL_WINDOW_GET_LIST_ITEM(x)->id = v
 
 #define ADL_GET_WINDOW_ID(x) \
-  (*(ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1))
+  ADL_WINDOW_GET_LIST_ITEM(x)->id
 
 #define ADL_GET_WINDOW_DATA(x) \
-  ((void *)((ADLWindowId *)(ADL_CHECK_TYPE(ADLWindow *, x) + 1) + 1))
+  ((void *)(ADL_WINDOW_GET_LIST_ITEM(x)+1))
+
+#define ADL_GET_WINDOW_IMAGE_LIST(x) \
+  (&ADL_WINDOW_GET_LIST_ITEM(x)->imageList)
 
 void windowListItemDestructor(void * item);
 ADLWindow * windowFindById(ADLWindowId id);

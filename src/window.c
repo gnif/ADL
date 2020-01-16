@@ -23,8 +23,10 @@
 */
 
 #include "window.h"
-#include "adl.h"
-#include "logging.h"
+#include "src/window.h"
+#include "src/adl.h"
+#include "src/logging.h"
+#include "src/image.h"
 
 #include <stdlib.h>
 
@@ -69,6 +71,15 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
   if (status != ADL_OK)
     return status;
 
+  /* initialize the image list */
+  if ((status = adlLinkedListNew(
+          ADL_IMAGE_LIST_ITEM_SIZE + adl.platform->imageDataSize,
+          imageListItemDestructor, &item->imageList)) != ADL_OK)
+  {
+    adlLinkedListPop(&adl.windowList, NULL);
+    return status;
+  }
+
   ADLWindow * win = &item->window;
 
   win->x = def.x;
@@ -99,6 +110,7 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window)
     return ADL_OK;
 
   ADL_STATUS status = ADL_OK;
+  adlLinkedListFree(ADL_GET_WINDOW_IMAGE_LIST(*window));
 
   ADLLinkedListItem * item;
   for(item = adl.windowList.head; item != NULL; item = item->next)

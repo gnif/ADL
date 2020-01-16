@@ -28,6 +28,7 @@
 #include "adl/window.h"
 #include "interface/adl.h"
 #include "linkedlist.h"
+#include "logging.h"
 
 #include <stdbool.h>
 #include <stdint.h>

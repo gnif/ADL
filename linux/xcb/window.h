@@ -22,20 +22,22 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL
-#define _H_ADL
+#ifndef _H_LINUX_XCB_WINDOW
+#define _H_LINUX_XCB_WINDOW
 
-#include "status.h"
-#include "window.h"
-#include "event.h"
-#include "image.h"
+#include "adl/status.h"
+#include "adl/image.h"
 
-ADL_STATUS adlInitialize();
-ADL_STATUS adlShutdown();
+typedef struct
+{
+  void * unused;
+}
+ImageData;
 
-ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
-ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
-ADL_STATUS adlFlush(void);
+ADL_STATUS xcbImageGetSupported(ADLImageBackend * result);
+ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
+    ADLImage * result);
+ADL_STATUS xcbImageDestroy(ADLImage * image);
+ADL_STATUS xcbImageUpdate(ADLImage * image);
 
 #endif

@@ -23,11 +23,12 @@
 */
 
 #include "adl.h"
-#include "window.h"
+#include "src/window.h"
 
 #include "interface/adl.h"
 #include "logging.h"
 #include "atoms.h"
+#include "window.h"
 
 #include <xcb/xcb.h>
 
@@ -766,7 +767,13 @@ static struct ADLPlatform xcb =
   .windowSetTitle     = xcbWindowSetTitle,
   .windowSetClassName = xcbWindowSetClassName,
   .windowSetGrab      = xcbWindowSetGrab,
-  .windowSetRelative  = xcbWindowSetRelative
+  .windowSetRelative  = xcbWindowSetRelative,
+
+  .imageDataSize      = sizeof(ImageData),
+  .imageGetSupported  = xcbImageGetSupported,
+  .imageCreate        = xcbImageCreate,
+  .imageDestroy       = xcbImageDestroy,
+  .imageUpdate        = xcbImageUpdate
 };
 
 adl_platform(xcb);

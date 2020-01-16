@@ -22,20 +22,48 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL
-#define _H_ADL
+#ifndef _H_SRC_IMAGE
+#define _H_SRC_IMAGE
 
-#include "status.h"
-#include "window.h"
-#include "event.h"
-#include "image.h"
+#include "adl.h"
+#include "linkedlist.h"
+#include "adl/image.h"
+#include <stdint.h>
 
-ADL_STATUS adlInitialize();
-ADL_STATUS adlShutdown();
+typedef uint64_t ADLImageId;
+typedef struct
+{
+  ADLLinkedListItem item;
 
-ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
-ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
-ADL_STATUS adlFlush(void);
+  ADLWindow  * window;
+  ADLImageId   id;
+  ADLImage     image;
+}
+ADLImageListItem;
+
+#define ADL_IMAGE_LIST_ITEM_SIZE \
+  (sizeof(ADLImageListItem))
+
+#define ADL_IMAGE_GET_LIST_ITEM(x) \
+  ((ADLImageListItem *)((uint8_t*)(ADL_CHECK_TYPE(ADLImage *, x)) - \
+     offsetof(ADLImageListItem, image)))
+
+#define ADL_SET_IMAGE_ID(x, v) \
+  ADL_IMAGE_GET_LIST_ITEM(x)->id = v
+
+#define ADL_GET_IMAGE_ID(x) \
+  ADL_IMAGE_GET_LIST_ITEM(x)->id
+
+#define ADL_GET_IMAGE_DATA(x) \
+  ((void *)(ADL_IMAGE_GET_LIST_ITEM(x)+1))
+
+#define ADL_GET_IMAGE_WINDOW(x) \
+  ADL_IMAGE_GET_LIST_ITEM(x)->window
+
+#define ADL_GET_IMAGE_LIST(x) \
+  ADL_GET_WINDOW_IMAGE_LIST(ADL_GET_IMAGE_WINDOW(x))
+
+void imageListItemDestructor(void * item);
+ADLImage * imageFindById(ADLWindow * window, ADLImageId id);
 
 #endif

@@ -58,7 +58,7 @@ int main()
   }
 
   /* Create a window and show it */
-  ADLWindowDef def =
+  ADLWindowDef winDef =
   {
     .title       = "ADL Test",
     .className   = "adl-test",
@@ -66,10 +66,31 @@ int main()
     .flags       = 0,
     .borderless  = false,
     .x           = 0  , .y = 0  ,
-    .w           = 200, .h = 200,
+    .w           = 200, .h = 200
   };
   ADLWindow * window;
-  if (adlWindowCreate(def, &window) != ADL_OK)
+  if (adlWindowCreate(winDef, &window) != ADL_OK)
+  {
+    retval = -1;
+    goto err_shutdown;
+  }
+
+  ADLImageDef imgDef = {
+    .backend = ADL_IMAGE_BACKEND_DMABUF,
+    .format  = ADL_IMAGE_FORMAT_BGRA,
+    .bpp     = 24,
+    .depth   = 32,
+    .stride  = 640 * 4,
+    .w       = 640,
+    .h       = 480,
+    .u.dmabuf = {
+      .fd     = 0,
+      .offset = 0,
+      .size   = 0
+    }
+  };
+  ADLImage * img;
+  if (adlImageCreate(window, imgDef, &img) != ADL_OK)
   {
     retval = -1;
     goto err_shutdown;
@@ -82,11 +103,12 @@ int main()
   ADLEvent event;
   ADL_STATUS status;
   bool grabMode = false;
-  while((status = adlProcessEvent(100, &event)) == ADL_OK)
+  while((status = adlProcessEvent(1, &event)) == ADL_OK)
   {
     switch(event.type)
     {
       case ADL_EVENT_NONE:
+        adlImageUpdate(img);
         continue;
 
       case ADL_EVENT_CLOSE:
