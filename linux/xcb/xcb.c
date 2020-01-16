@@ -54,6 +54,9 @@ WindowData;
 
 static struct State this;
 
+ADL_STATUS xcbWindowSetTitle    (ADLWindow * window, const char * title);
+ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className);
+
 static const char * xcbErrString(int error)
 {
   switch(error)
@@ -75,7 +78,7 @@ static const char * xcbErrString(int error)
    }
 }
 
-static void updateWindowProperties(WindowData * data, const ADLWindowDef props)
+static void setWindowProperties(WindowData * data, const ADLWindowDef props)
 {
   struct WMSizeHints hints =
   {
@@ -334,9 +337,11 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     return ADL_ERR_PLATFORM;
   }
 
+  /* set the window's ID and get the window data */
   ADL_SET_WINDOW_ID(result, window);
-
   WindowData * data = ADL_GET_WINDOW_DATA(result);
+
+  /* setup the local window data */
   memset(data, 0, sizeof(WindowData));
   data->window = window;
 
@@ -344,7 +349,10 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
-  updateWindowProperties(data, def);
+  /* set the window properties */
+  setWindowProperties(data, def);
+  xcbWindowSetClassName(result, def.className);
+  xcbWindowSetTitle    (result, def.title    );
   return ADL_OK;
 }
 
@@ -352,7 +360,6 @@ ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_destroy_window(this.xcb, data->window);
-  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
@@ -360,7 +367,6 @@ ADL_STATUS xcbWindowShow(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_map_window(this.xcb, data->window);
-  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
@@ -368,7 +374,6 @@ ADL_STATUS xcbWindowHide(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_unmap_window(this.xcb, data->window);
-  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
@@ -377,23 +382,43 @@ ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_window_t win  = data->window;
 
+  const int len = strlen(title);
+
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_ICON_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_VISIBLE_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_ICON_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
 
   changeProperty(XCB_PROP_MODE_REPLACE, win, IA_NET_WM_VISIBLE_ICON_NAME,
-    IA_XCB_ATOM_STRING, 8, strlen(title), title);
+    IA_XCB_ATOM_STRING, 8, len, title);
+
+  return ADL_OK;
+}
+
+ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_window_t win  = data->window;
+
+  /* https://tronche.com/gui/x/icccm/sec-4.html#WM_CLASS
+   * The WM_CLASS property (of type STRING without control characters) contains
+   * two consecutive null-terminated strings */
+
+  changeProperty(XCB_PROP_MODE_REPLACE, win, IA_XCB_ATOM_WM_CLASS,
+    IA_XCB_ATOM_STRING, 8, strlen(className) + 1, className);
+
+  changeProperty(XCB_PROP_MODE_APPEND, win, IA_XCB_ATOM_WM_CLASS,
+    IA_XCB_ATOM_STRING, 8, strlen(className) + 1, className);
 
   return ADL_OK;
 }
@@ -595,19 +620,27 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
   return ADL_OK;
 }
 
+static ADL_STATUS xcbFlush()
+{
+  xcb_flush(this.xcb);
+  return ADL_OK;
+}
+
 static struct ADLPlatform xcb =
 {
-  .name           = "XCB",
-  .test           = xcbTest,
-  .init           = xcbInitialize,
-  .deinit         = xcbDeinitialize,
-  .processEvent   = xcbProcessEvent,
-  .windowDataSize = sizeof(WindowData),
-  .windowCreate   = xcbWindowCreate,
-  .windowDestroy  = xcbWindowDestroy,
-  .windowShow     = xcbWindowShow,
-  .windowHide     = xcbWindowHide,
-  .windowSetTitle = xcbWindowSetTitle
+  .name               = "XCB",
+  .test               = xcbTest,
+  .init               = xcbInitialize,
+  .deinit             = xcbDeinitialize,
+  .processEvent       = xcbProcessEvent,
+  .flush              = xcbFlush,
+  .windowDataSize     = sizeof(WindowData),
+  .windowCreate       = xcbWindowCreate,
+  .windowDestroy      = xcbWindowDestroy,
+  .windowShow         = xcbWindowShow,
+  .windowHide         = xcbWindowHide,
+  .windowSetTitle     = xcbWindowSetTitle,
+  .windowSetClassName = xcbWindowSetClassName
 };
 
 adl_platform(xcb);

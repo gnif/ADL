@@ -31,7 +31,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef ADL_STATUS (*ADLPfFn)();
+typedef ADL_STATUS (*ADLPfFn)(void);
 
 typedef ADL_STATUS (*ADLPfProcessEvent)
   (int timeout, ADLEvent * event);
@@ -50,6 +50,7 @@ struct ADLPlatform
   ADLPfFn            init;
   ADLPfFn            deinit;
   ADLPfProcessEvent  processEvent;
+  ADLPfFn            flush;
 
   size_t              windowDataSize;
   ADLPfWindowCreate   windowCreate;
@@ -57,6 +58,7 @@ struct ADLPlatform
   ADLPfWindowFn       windowShow;
   ADLPfWindowFn       windowHide;
   ADLPfWindowSetStrFn windowSetTitle;
+  ADLPfWindowSetStrFn windowSetClassName;
 };
 
 #define adl_platform(x) \

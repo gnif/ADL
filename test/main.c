@@ -61,11 +61,12 @@ int main()
   ADLWindowDef def =
   {
     .title       = "ADL Test",
-    .type        = ADL_WINDOW_TYPE_DIALOG,
+    .className   = "adl-test",
+    .type        = ADL_WINDOW_TYPE_NORMAL,
     .flags       = 0,
     .borderless  = false,
-    .x = 0  , .y = 0  ,
-    .w = 200, .h = 200,
+    .x           = 0  , .y = 0  ,
+    .w           = 200, .h = 200,
   };
   ADLWindow * window;
   if (adlWindowCreate(def, &window) != ADL_OK)
@@ -75,6 +76,7 @@ int main()
   }
 
   adlWindowShow(window);
+  adlFlush();
 
   /* Process events */
   ADLEvent event;

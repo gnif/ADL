@@ -66,15 +66,17 @@ ADL_STATUS adlInitialize()
 
     /* perform a sanity check on the struct */
     if (
-      !p->test           ||
-      !p->init           ||
-      !p->deinit         ||
-      !p->processEvent   ||
-      !p->windowCreate   ||
-      !p->windowDestroy  ||
-      !p->windowShow     ||
-      !p->windowHide     ||
-      !p->windowSetTitle ||
+      !p->test               ||
+      !p->init               ||
+      !p->deinit             ||
+      !p->processEvent       ||
+      !p->flush              ||
+      !p->windowCreate       ||
+      !p->windowDestroy      ||
+      !p->windowShow         ||
+      !p->windowHide         ||
+      !p->windowSetTitle     ||
+      !p->windowSetClassName ||
       0
     ) {
       DEBUG_BUG(ADL_ERR_PLATFORM,
@@ -275,4 +277,10 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
   }
 
   return status;
+}
+
+ADL_STATUS adlFlush()
+{
+  ADL_INITCHECK;
+  return adl.platform->flush();
 }

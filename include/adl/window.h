@@ -73,6 +73,7 @@ ADLWindowType;
 typedef struct
 {
   const char *  title;
+  const char *  className;
   ADLWindowType type;
   ADLWindowFlag flags; // this is a bitfield
   bool          borderless;
@@ -97,5 +98,6 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window);
 ADL_STATUS adlWindowShow(ADLWindow * window);
 ADL_STATUS adlWindowHide(ADLWindow * window);
 ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title);
+ADL_STATUS adlWindowSetClassName(ADLWindow * window, const char * className);
 
 #endif

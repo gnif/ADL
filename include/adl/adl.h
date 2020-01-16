@@ -35,5 +35,6 @@ ADL_STATUS adlShutdown();
 ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
 ADL_STATUS adlUsePlatform(const char * name);
 ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
+ADL_STATUS adlFlush(void);
 
 #endif

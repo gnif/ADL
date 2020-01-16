@@ -86,9 +86,6 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
     return ADL_ERR_PLATFORM;
   }
 
-  if (def.title)
-    adlWindowSetTitle(win, def.title);
-
   *result = win;
   return status;
 }
@@ -132,6 +129,13 @@ ADL_STATUS adlWindowHide(ADLWindow * window)
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(window);
   return adl.platform->windowHide(window);
+}
+
+ADL_STATUS adlWindowSetClassName(ADLWindow * window, const char * className)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+  return adl.platform->windowSetClassName(window, className);
 }
 
 ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title)
