@@ -58,29 +58,45 @@ ADL_STATUS adlInitialize()
     return ADL_ERR_ALREADY_INITIALIZED;
   }
 
+  /* build an array of the platform members for validation */
+  struct CheckField {
+    const char * name;
+    uintptr_t    offset;
+  };
+  #define ADL_FIELD(_type, _name) { \
+    .name   = #_name, \
+    .offset = offsetof(struct ADLPlatform, _name) \
+  },
+  static const struct CheckField checkFields[] =
+  {
+    ADL_PLATFORM_FIELDS
+    { 0 }
+  };
+  #undef ADL_FIELD
+
   /* call the platforms test methods, removing any that fail or are
    * unsupported to prevent future evaluation */
   for(int i = 0; i < adl.platformListCount; ++i)
   {
+
     const struct ADLPlatform * p = adl.platformList[i];
 
-    /* perform a sanity check on the struct */
-    if (
-      !p->test               ||
-      !p->init               ||
-      !p->deinit             ||
-      !p->processEvent       ||
-      !p->flush              ||
-      !p->windowCreate       ||
-      !p->windowDestroy      ||
-      !p->windowShow         ||
-      !p->windowHide         ||
-      !p->windowSetTitle     ||
-      !p->windowSetClassName ||
-      0
-    ) {
+    /* perform a sanity check on the platform members */
+    bool error = false;
+    for(const struct CheckField *f = checkFields; f->name; ++f)
+    {
+      const void ** check = (const void **)((const uint8_t*)p + f->offset);
+      if (!*check)
+      {
+        DEBUG_BUG(ADL_ERR_PLATFORM, "%s: `%s` is NULL", p->name, f->name);
+        error = true;
+      }
+    }
+
+    if (error)
+    {
       DEBUG_BUG(ADL_ERR_PLATFORM,
-          "Platform `%s` is incomplete", p->name);
+          "%s: Implemention is incomplete and has been disabled", p->name);
       adl.platformList[i] = NULL;
       continue;
     }

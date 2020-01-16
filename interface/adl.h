@@ -43,23 +43,31 @@ typedef ADL_STATUS (*ADLPfWindow)(ADLWindow * window);
 
 typedef ADL_STATUS (*ADLPfWindowSetStr)(ADLWindow * window, const char * str);
 
+#define ADL_PLATFORM_FIELDS \
+  ADL_FIELD(const char *     , name        ) \
+  ADL_FIELD(ADLPf            , test        ) \
+  ADL_FIELD(ADLPf            , init        ) \
+  ADL_FIELD(ADLPf            , deinit      ) \
+  ADL_FIELD(ADLPfProcessEvent, processEvent) \
+  ADL_FIELD(ADLPf            , flush       ) \
+  \
+  ADL_FIELD(size_t            , windowDataSize    ) \
+  ADL_FIELD(ADLPfWindowCreate , windowCreate      ) \
+  ADL_FIELD(ADLPfWindow       , windowDestroy     ) \
+  ADL_FIELD(ADLPfWindow       , windowShow        ) \
+  ADL_FIELD(ADLPfWindow       , windowHide        ) \
+  ADL_FIELD(ADLPfWindowSetStr , windowSetTitle    ) \
+  ADL_FIELD(ADLPfWindowSetStr , windowSetClassName)
+
+#define ADL_FIELD(type, name) \
+  type name;
+
 struct ADLPlatform
 {
-  const char *      name;
-  ADLPf             test;
-  ADLPf             init;
-  ADLPf             deinit;
-  ADLPfProcessEvent processEvent;
-  ADLPf             flush;
-
-  size_t            windowDataSize;
-  ADLPfWindowCreate windowCreate;
-  ADLPfWindow       windowDestroy;
-  ADLPfWindow       windowShow;
-  ADLPfWindow       windowHide;
-  ADLPfWindowSetStr windowSetTitle;
-  ADLPfWindowSetStr windowSetClassName;
+  ADL_PLATFORM_FIELDS
 };
+
+#undef ADL_FIELD
 
 #define adl_platform(x) \
   static const void * __adl_platform_p_##x = &x;\
