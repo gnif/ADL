@@ -46,7 +46,7 @@ ADLWindowListItem;
   (sizeof(ADLWindowListItem))
 
 #define ADL_WINDOW_GET_LIST_ITEM(x) \
-  ((ADLWindowListItem *)((uint8_t*)(ADL_CHECK_TYPE(ADLWindow *, x)) - \
+  ((ADLWindowListItem *)(((uint8_t*)ADL_CHECK_TYPE(ADLWindow *, x)) - \
      offsetof(ADLWindowListItem, window)))
 
 #define ADL_SET_WINDOW_ID(x, v) \
@@ -59,9 +59,9 @@ ADLWindowListItem;
   ((void *)(ADL_WINDOW_GET_LIST_ITEM(x)+1))
 
 #define ADL_GET_WINDOW_IMAGE_LIST(x) \
-  (&ADL_WINDOW_GET_LIST_ITEM(x)->imageList)
+  (&(ADL_WINDOW_GET_LIST_ITEM(x)->imageList))
 
-void windowListItemDestructor(void * item);
+void windowListItemDestructor(ADLLinkedListItem * item);
 ADLWindow * windowFindById(ADLWindowId id);
 
 #endif

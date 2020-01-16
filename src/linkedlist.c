@@ -44,7 +44,7 @@ ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedListItemDtor dtor,
   }
 
   if (!dtor)
-    dtor = free;
+    dtor = (void *)(ADLLinkedListItem *)free;
 
   list->size  = itemSize;
   list->count = 0;

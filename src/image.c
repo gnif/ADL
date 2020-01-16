@@ -28,15 +28,15 @@
 
 #include <stdlib.h>
 
-void imageListItemDestructor(void * item)
+void imageListItemDestructor(ADLLinkedListItem  * item)
 {
-  ADLImage * image = (ADLImage *)item;
+  ADLImageListItem * ii = (ADLImageListItem*)item;
 
   ADL_STATUS status;
-  if ((status = adl.platform->imageDestroy(image)) != ADL_OK)
+  if ((status = adl.platform->imageDestroy(&ii->image)) != ADL_OK)
     DEBUG_ERROR(status, "imageDestroy failed");
 
-  free(image);
+  free(ii);
 }
 
 ADLImage * imageFindById(ADLWindow * window, ADLImageId id)

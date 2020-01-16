@@ -37,7 +37,7 @@ typedef struct _ADLLinkedListItem
 }
 ADLLinkedListItem;
 
-typedef void (* ADLLinkedListItemDtor)(void *);
+typedef void (* ADLLinkedListItemDtor)(ADLLinkedListItem * item);
 
 typedef struct
 {

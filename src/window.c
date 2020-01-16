@@ -30,15 +30,17 @@
 
 #include <stdlib.h>
 
-void windowListItemDestructor(void * item)
+void windowListItemDestructor(ADLLinkedListItem * item)
 {
-  ADLWindow * window = (ADLWindow *)item;
+  ADLWindowListItem * wi = (ADLWindowListItem *)item;
+
+  adlLinkedListFree(ADL_GET_WINDOW_IMAGE_LIST(&wi->window));
 
   ADL_STATUS status;
-  if ((status = adl.platform->windowDestroy(window)) != ADL_OK)
+  if ((status = adl.platform->windowDestroy(&wi->window)) != ADL_OK)
     DEBUG_ERROR(status, "windowDestroy failed");
 
-  free(window);
+  free(wi);
 }
 
 ADLWindow * windowFindById(ADLWindowId id)
@@ -110,8 +112,6 @@ ADL_STATUS adlWindowDestroy(ADLWindow ** window)
     return ADL_OK;
 
   ADL_STATUS status = ADL_OK;
-  adlLinkedListFree(ADL_GET_WINDOW_IMAGE_LIST(*window));
-
   ADLLinkedListItem * item;
   for(item = adl.windowList.head; item != NULL; item = item->next)
   {

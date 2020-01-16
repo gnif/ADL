@@ -45,7 +45,7 @@ ADLImageListItem;
   (sizeof(ADLImageListItem))
 
 #define ADL_IMAGE_GET_LIST_ITEM(x) \
-  ((ADLImageListItem *)((uint8_t*)(ADL_CHECK_TYPE(ADLImage *, x)) - \
+  ((ADLImageListItem *)(((uint8_t*)ADL_CHECK_TYPE(ADLImage *, x)) - \
      offsetof(ADLImageListItem, image)))
 
 #define ADL_SET_IMAGE_ID(x, v) \
@@ -63,7 +63,7 @@ ADLImageListItem;
 #define ADL_GET_IMAGE_LIST(x) \
   ADL_GET_WINDOW_IMAGE_LIST(ADL_GET_IMAGE_WINDOW(x))
 
-void imageListItemDestructor(void * item);
+void imageListItemDestructor(ADLLinkedListItem * item);
 ADLImage * imageFindById(ADLWindow * window, ADLImageId id);
 
 #endif
