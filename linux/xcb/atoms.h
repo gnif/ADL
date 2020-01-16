@@ -42,6 +42,34 @@ struct MotifHints
     uint32_t   status;
 };
 
+struct WMSizeHints
+{
+  uint32_t flags;
+  int32_t  x, y;
+  int32_t  width, height;
+  int32_t  min_width, min_height;
+  int32_t  max_width, max_height;
+  int32_t  width_inc, height_inc;
+  int32_t  min_aspect_num, min_aspect_den;
+  int32_t  max_aspect_num, max_aspect_den;
+  int32_t  base_width, base_height;
+  uint32_t win_gravity;
+};
+
+enum WMSizeHintsFlag
+{
+  WM_SIZE_HINT_US_POSITION   = 1U << 0,
+  WM_SIZE_HINT_US_SIZE       = 1U << 1,
+  WM_SIZE_HINT_P_POSITION    = 1U << 2,
+  WM_SIZE_HINT_P_SIZE        = 1U << 3,
+  WM_SIZE_HINT_P_MIN_SIZE    = 1U << 4,
+  WM_SIZE_HINT_P_MAX_SIZE    = 1U << 5,
+  WM_SIZE_HINT_P_RESIZE_INC  = 1U << 6,
+  WM_SIZE_HINT_P_ASPECT      = 1U << 7,
+  WM_SIZE_HINT_BASE_SIZE     = 1U << 8,
+  WM_SIZE_HINT_P_WIN_GRAVITY = 1U << 9
+};
+
 #define INTERN_ATOMS \
   INTERN_ATOM1(WM_PROTOCOLS) \
   INTERN_ATOM1(WM_DELETE_WINDOW) \
@@ -102,7 +130,9 @@ struct MotifHints
   INTERN_ATOM3(XCB_ATOM_STRING) \
   INTERN_ATOM3(XCB_ATOM_INTEGER) \
   INTERN_ATOM3(XCB_ATOM_WM_NAME) \
-  INTERN_ATOM3(XCB_ATOM_WM_ICON_NAME)
+  INTERN_ATOM3(XCB_ATOM_WM_ICON_NAME) \
+  INTERN_ATOM3(XCB_ATOM_WM_NORMAL_HINTS) \
+  INTERN_ATOM3(XCB_ATOM_WM_SIZE_HINTS)
 
 #define INTERN_ATOM1(x) IA_ ##x,
 #define INTERN_ATOM2(x) IA ##x,
@@ -155,7 +185,7 @@ inline static void _changeProperty(
 #define getAtom(x)  (internAtom[x].atom)
 
 #define changeProperty(mode, window, property,type, format, data_len, data) \
-  _changeProperty(this.xcb, mode, window, internAtom[property].atom, \
-    internAtom[type].atom, format, data_len, data)
+  _changeProperty(this.xcb, mode, window, getAtom(property), getAtom(type), \
+      format, data_len, data)
 
 #endif

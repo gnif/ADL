@@ -30,6 +30,7 @@
 #include "atoms.h"
 
 #include <xcb/xcb.h>
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -47,7 +48,7 @@ typedef struct
 {
   xcb_window_t window;
   xcb_window_t parent;
-  int transX, transY;
+  int          transX, transY;
 }
 WindowData;
 
@@ -74,8 +75,28 @@ static const char * xcbErrString(int error)
    }
 }
 
-static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props)
+static void updateWindowProperties(WindowData * data, const ADLWindowDef props)
 {
+  struct WMSizeHints hints =
+  {
+    .flags       = WM_SIZE_HINT_P_WIN_GRAVITY,
+    .win_gravity = XCB_GRAVITY_STATIC
+  };
+
+  if (props.flags & ADL_WINDOW_FLAG_CENTER)
+    hints.win_gravity = XCB_GRAVITY_CENTER;
+  else
+  {
+    hints.flags |= WM_SIZE_HINT_P_POSITION;
+    hints.x = props.x;
+    hints.y = props.y;
+  }
+
+  changeProperty(XCB_PROP_MODE_REPLACE, data->window,
+    IA_XCB_ATOM_WM_NORMAL_HINTS, IA_XCB_ATOM_WM_SIZE_HINTS, 32,
+    sizeof(struct WMSizeHints) >> 2, &hints);
+
+
   {
 #define SET_FLAG(x, y) \
     if ((props.flags & ADL_WINDOW_FLAG_ ##x) && haveAtom(IA_NET_WM_STATE_ ##y)) \
@@ -99,7 +120,7 @@ static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props
     SET_FLAG(FOCUSED     , FOCUSED          )
 
     if (stateCount)
-      changeProperty(XCB_PROP_MODE_REPLACE, window, IA_NET_WM_STATE,
+      changeProperty(XCB_PROP_MODE_REPLACE, data->window, IA_NET_WM_STATE,
         IA_XCB_ATOM_ATOM, 32, stateCount, state);
 
 #undef SET_FLAG
@@ -143,7 +164,7 @@ static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props
     // normal is always appended
     type[typeCount++] = getAtom(IA_NET_WM_WINDOW_TYPE_NORMAL);
 
-    changeProperty(XCB_PROP_MODE_REPLACE, window, IA_NET_WM_WINDOW_TYPE,
+    changeProperty(XCB_PROP_MODE_REPLACE, data->window, IA_NET_WM_WINDOW_TYPE,
         IA_XCB_ATOM_ATOM, 32, typeCount, type);
 
 #undef SET_TYPE
@@ -152,7 +173,7 @@ static void updateWindowProperties(xcb_window_t window, const ADLWindowDef props
   if (haveAtom(IA_MOTIF_WM_HINTS))
   {
     struct MotifHints hints = {.flags = props.borderless ? 2 : 0};
-    changeProperty(XCB_PROP_MODE_REPLACE, window, IA_MOTIF_WM_HINTS,
+    changeProperty(XCB_PROP_MODE_REPLACE, data->window, IA_MOTIF_WM_HINTS,
         IA_XCB_ATOM_INTEGER, 32, 5, &hints);
   }
 }
@@ -274,15 +295,19 @@ static ADL_STATUS xcbDeinitialize()
 
 ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 {
-  const uint32_t values[2] =
+  uint32_t values[3] =
   {
     this.screen->white_pixel,
+    XCB_GRAVITY_STATIC,
     XCB_EVENT_MASK_EXPOSURE         |
     XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_VISIBILITY_CHANGE |
     XCB_EVENT_MASK_KEY_PRESS        | XCB_EVENT_MASK_KEY_RELEASE       |
     XCB_EVENT_MASK_BUTTON_PRESS     | XCB_EVENT_MASK_BUTTON_RELEASE    |
     XCB_EVENT_MASK_POINTER_MOTION
   };
+
+  if (def.flags & ADL_WINDOW_FLAG_CENTER)
+    values[1] = XCB_GRAVITY_CENTER;
 
   xcb_window_t window = xcb_generate_id(this.xcb);
   xcb_void_cookie_t c =
@@ -296,7 +321,7 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
       0,
       XCB_WINDOW_CLASS_INPUT_OUTPUT,
       this.screen->root_visual,
-      XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK,
+      XCB_CW_BACK_PIXEL | XCB_CW_WIN_GRAVITY | XCB_CW_EVENT_MASK,
       values
     );
 
@@ -311,15 +336,15 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 
   ADL_SET_WINDOW_ID(result, window);
 
-  WindowData * win = ADL_GET_WINDOW_DATA(result);
-  win->window = window;
-  win->parent = 0;
+  WindowData * data = ADL_GET_WINDOW_DATA(result);
+  memset(data, 0, sizeof(WindowData));
+  data->window = window;
 
   /* register for close events */
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);
 
-  updateWindowProperties(window, def);
+  updateWindowProperties(data, def);
   return ADL_OK;
 }
 
