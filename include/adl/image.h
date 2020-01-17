@@ -46,8 +46,6 @@ ADLImageFormat;
 typedef struct
 {
   int    fd    ; // the dma file descriptor
-  off_t  offset; // the offset to the image data
-  size_t size  ; // the total size of the buffer
 }
 ADLImageDMABuf;
 

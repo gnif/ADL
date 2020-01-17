@@ -84,9 +84,7 @@ int main()
     .w       = 640,
     .h       = 480,
     .u.dmabuf = {
-      .fd     = 0,
-      .offset = 0,
-      .size   = 0
+      .fd     = 0
     }
   };
   ADLImage * img;

@@ -30,40 +30,13 @@
 #include "atoms.h"
 #include "image.h"
 
-#include <xcb/xcb.h>
-
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
-struct State
-{
-  xcb_connection_t * xcb;
-  int                fd;
-  xcb_screen_t     * screen;
+#include "xcb.h"
 
-  ADLMouseButton mouseButtonState;
-};
-
-typedef struct
-{
-  xcb_window_t window;
-  xcb_window_t parent;
-  uint16_t     eventMask;
-  int          transX, transY;
-  bool         grabbed, relative;
-
-  // window position & size
-  int x, y, w, h;
-
-  // cursor state information
-  bool warping;
-  int  warpMidX, warpMidY;
-  int  warpX   , warpY   ;
-}
-WindowData;
-
-static struct State this;
+struct State this;
 
 ADL_STATUS xcbWindowSetTitle    (ADLWindow * window, const char * title);
 ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className);

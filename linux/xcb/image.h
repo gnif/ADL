@@ -30,7 +30,11 @@
 
 typedef struct
 {
-  void * unused;
+  xcb_window_t window;
+  ADLImageDef  def;
+
+  xcb_pixmap_t pixmap;
+  unsigned int serial;
 }
 ImageData;
 

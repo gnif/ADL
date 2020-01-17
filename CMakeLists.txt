@@ -18,7 +18,7 @@ set(SOURCES
   src/linkedlist.c
 )
 
-pkg_check_modules(XCB xcb)
+pkg_check_modules(XCB xcb xcb-dri3 xcb-present)
 if(XCB_FOUND)  
   list(APPEND SOURCES
     linux/xcb/xcb.c
