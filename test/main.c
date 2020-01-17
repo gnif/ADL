@@ -75,25 +75,6 @@ int main()
     goto err_shutdown;
   }
 
-  ADLImageDef imgDef = {
-    .backend = ADL_IMAGE_BACKEND_DMABUF,
-    .format  = ADL_IMAGE_FORMAT_BGRA,
-    .bpp     = 24,
-    .depth   = 32,
-    .stride  = 640 * 4,
-    .w       = 640,
-    .h       = 480,
-    .u.dmabuf = {
-      .fd     = 0
-    }
-  };
-  ADLImage * img;
-  if (adlImageCreate(window, imgDef, &img) != ADL_OK)
-  {
-    retval = -1;
-    goto err_shutdown;
-  }
-
   adlWindowShow(window);
   adlFlush();
 
@@ -106,7 +87,6 @@ int main()
     switch(event.type)
     {
       case ADL_EVENT_NONE:
-        adlImageUpdate(img);
         continue;
 
       case ADL_EVENT_CLOSE:
@@ -128,7 +108,7 @@ int main()
         break;
 
       case ADL_EVENT_KEY_DOWN:
-        printf("key down: %u\n", event.u.key.scancode);
+        printf("key down: %x\n", event.u.key.scancode);
         // scroll lock key
         if (event.u.key.scancode == 78)
         {
@@ -140,7 +120,7 @@ int main()
         break;
 
       case ADL_EVENT_KEY_UP:
-        printf("key up: %u\n", event.u.key.scancode);
+        printf("key up: %x\n", event.u.key.scancode);
         if (event.u.key.scancode == 9)
           goto exit;
         break;
