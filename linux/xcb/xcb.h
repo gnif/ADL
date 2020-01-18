@@ -31,6 +31,7 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xkb.h>
+#include <xcb/xcb_cursor.h>
 
 struct State
 {
@@ -38,6 +39,11 @@ struct State
   int                fd;
   xcb_screen_t *     screen;
   char               keyMap[256][5];
+
+  xcb_cursor_context_t * cursorContext;
+  xcb_cursor_t defaultPointer;
+  xcb_pixmap_t blankPixmap;
+  xcb_cursor_t blankPointer;
 };
 
 extern struct State this;

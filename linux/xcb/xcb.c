@@ -338,9 +338,63 @@ static ADL_STATUS xcbInitialize()
     free(r);
   }
 
+  /* create a blank cursor for when we need to hide it */
+  this.blankPointer = xcb_generate_id(this.xcb);
+  this.blankPixmap  = xcb_generate_id(this.xcb);
+
+  {
+    xcb_void_cookie_t c;
+    xcb_generic_error_t * error;
+
+    c = xcb_create_pixmap_checked(
+          this.xcb,
+          1,
+          this.blankPixmap,
+          this.screen->root,
+          1,
+          1);
+
+    if ((error = xcb_request_check(this.xcb, c)))
+    {
+      DEBUG_INFO(ADL_ERR_PLATFORM, "failed to create the blank pixmap");
+      status = ADL_ERR_PLATFORM;
+      free(error);
+      goto err_disconnect;
+    }
+
+    c = xcb_create_cursor_checked(
+          this.xcb,
+          this.blankPointer,
+          this.blankPixmap,
+          this.blankPixmap,
+          0, 0, 0, 0, 0, 0, 0, 0);
+
+    if ((error = xcb_request_check(this.xcb, c)))
+    {
+      DEBUG_INFO(ADL_ERR_PLATFORM, "failed to create the blank pointer");
+      status = ADL_ERR_PLATFORM;
+      free(error);
+      goto err_free_cursor_pixmap;
+    }
+  }
+
+  /* load the default pointer for when we need to restore it */
+  if (xcb_cursor_context_new(this.xcb, this.screen, &this.cursorContext) < 0)
+  {
+    DEBUG_INFO(ADL_ERR_PLATFORM, "failed to initialize xcb-cursor");
+    status = ADL_ERR_PLATFORM;
+    goto err_free_cursor;
+  }
+
+  this.defaultPointer = xcb_cursor_load_cursor(this.cursorContext, "left_ptr");
+
   this.fd = xcb_get_file_descriptor(this.xcb);
   return status;
 
+err_free_cursor:
+  xcb_free_cursor(this.xcb, this.blankPointer);
+err_free_cursor_pixmap:
+  xcb_free_pixmap(this.xcb, this.blankPixmap);
 err_disconnect:
   xcb_disconnect(this.xcb);
   this.xcb = NULL;
@@ -350,6 +404,10 @@ err_out:
 
 static ADL_STATUS xcbDeinitialize()
 {
+  xcb_free_cursor(this.xcb, this.defaultPointer);
+  xcb_free_cursor(this.xcb, this.blankPointer  );
+  xcb_free_pixmap(this.xcb, this.blankPixmap   );
+  xcb_cursor_context_free(this.cursorContext);
   xcb_disconnect(this.xcb);
   this.xcb = NULL;
   return ADL_OK;
@@ -537,7 +595,21 @@ static ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   if (data->relative == enable)
     return ADL_OK;
+
   data->relative = enable;
+
+  if (enable)
+  {
+    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
+        &this.blankPointer);
+  }
+  else
+  {
+    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
+        &this.defaultPointer);
+  }
+
+  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
