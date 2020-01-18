@@ -315,3 +315,9 @@ ADL_STATUS adlFlush()
   ADL_INITCHECK;
   return adl.platform->flush();
 }
+
+ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y)
+{
+  ADL_INITCHECK;
+  return adl.platform->pointerWarp(window, x, y);
+}

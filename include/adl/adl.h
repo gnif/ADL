@@ -38,4 +38,6 @@ ADL_STATUS adlUsePlatform(const char * name);
 ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
 ADL_STATUS adlFlush(void);
 
+ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
+
 #endif

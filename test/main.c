@@ -108,9 +108,9 @@ int main()
         break;
 
       case ADL_EVENT_KEY_DOWN:
-        printf("key down: %x\n", event.u.key.scancode);
+        printf("key down: %03d %s\n", event.u.key.scancode, event.u.key.keyname);
         // scroll lock key
-        if (event.u.key.scancode == 78)
+        if (event.u.key.scancode == 70)
         {
           grabMode = !grabMode;
           adlWindowSetGrab    (window, grabMode);
@@ -120,8 +120,8 @@ int main()
         break;
 
       case ADL_EVENT_KEY_UP:
-        printf("key up: %x\n", event.u.key.scancode);
-        if (event.u.key.scancode == 9)
+//        printf("key up: %x\n", event.u.key.scancode);
+        if (event.u.key.scancode == 1)
           goto exit;
         break;
 
@@ -136,9 +136,11 @@ int main()
         break;
 
       case ADL_EVENT_MOUSE_MOVE:
+        /*
         printf("move: %4d %4d %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.relX, event.u.mouse.relY,
             event.u.mouse.buttons);
+            */
         break;
 
       default:

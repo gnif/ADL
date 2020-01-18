@@ -28,6 +28,8 @@
 #include "adl.h"
 #include "window.h"
 
+#include <stdint.h>
+
 typedef enum
 {
   /* this type means there are no events to process */
@@ -55,7 +57,8 @@ ADLEventWindow;
 
 typedef struct
 {
-  unsigned int scancode;
+  const char * keyname;
+  uint8_t      scancode;
 }
 ADLEventKeyboard;
 
@@ -84,6 +87,8 @@ typedef struct
   int  x    , y;
   int  relX , relY;
 
+  // true if there is a mouse warp pending
+  bool warping;
   // true if the mouse was warped (relative mode)
   bool warp;
   // how far it was warped

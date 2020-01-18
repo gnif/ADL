@@ -30,14 +30,14 @@
 #include "src/window.h"
 
 #include <xcb/xcb.h>
+#include <xcb/xkb.h>
 
 struct State
 {
-  xcb_connection_t  * xcb;
+  xcb_connection_t * xcb;
   int                fd;
-  xcb_screen_t      * screen;
-
-  ADLMouseButton mouseButtonState;
+  xcb_screen_t *     screen;
+  char               keyMap[256][5];
 };
 
 extern struct State this;
@@ -53,10 +53,14 @@ typedef struct
   // window position & size
   int x, y, w, h;
 
-  // cursor state information
-  bool warping;
-  int  warpMidX, warpMidY;
-  int  warpX   , warpY   ;
+  // pointer state information
+  int            pointerX, pointerY;
+  ADLMouseButton mouseButtonState;
+
+  // pointer warp information
+  bool              warping;
+  xcb_void_cookie_t warpCookie;
+  int               warpX, warpY;
 }
 WindowData;
 

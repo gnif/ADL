@@ -38,8 +38,10 @@
 
 struct State this;
 
-ADL_STATUS xcbWindowSetTitle    (ADLWindow * window, const char * title);
-ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className);
+static ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title);
+static ADL_STATUS xcbWindowSetClassName(ADLWindow * window,
+    const char * className);
+static ADL_STATUS xcbPointerWarp(ADLWindow * window, int x, int y);
 
 static const char * xcbErrString(int error)
 {
@@ -263,6 +265,79 @@ static ADL_STATUS xcbInitialize()
     free(r);
   }
 
+  /* we need xkb */
+  {
+    xcb_xkb_use_extension_cookie_t c =
+      xcb_xkb_use_extension(this.xcb,
+          XCB_XKB_MAJOR_VERSION, XCB_XKB_MINOR_VERSION);
+
+    xcb_xkb_use_extension_reply_t * r =
+      xcb_xkb_use_extension_reply(this.xcb, c, NULL);
+
+    if (!r)
+    {
+      DEBUG_INFO(ADL_ERR_PLATFORM, "xcb_xkb_use_extension failed");
+      status = ADL_ERR_PLATFORM;
+      goto err_disconnect;
+    }
+
+    free(r);
+  }
+
+  /* prevent auto-repeat of key up events */
+  xcb_xkb_per_client_flags(this.xcb, XCB_XKB_ID_USE_CORE_KBD,
+    XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+    XCB_XKB_PER_CLIENT_FLAG_DETECTABLE_AUTO_REPEAT,
+    0, 0, 0);
+
+  /* lookup the keyboard mapping */
+  {
+    xcb_xkb_get_names_cookie_t c =
+      xcb_xkb_get_names(this.xcb, XCB_XKB_ID_USE_CORE_KBD,
+          XCB_XKB_NAME_DETAIL_KEY_NAMES);
+
+    xcb_xkb_get_names_reply_t * r =
+      xcb_xkb_get_names_reply(this.xcb, c, NULL);
+
+    if (!r)
+    {
+      DEBUG_INFO(ADL_ERR_PLATFORM, "xcb_xkb_get_names");
+      status = ADL_ERR_PLATFORM;
+      goto err_disconnect;
+    }
+
+    xcb_xkb_get_names_value_list_t list;
+    {
+      void * buffer;
+      buffer = xcb_xkb_get_names_value_list(r);
+      xcb_xkb_get_names_value_list_unpack(
+        buffer,
+        r->nTypes,
+        r->indicators,
+        r->virtualMods,
+        r->groupNames,
+        r->nKeys,
+        r->nKeyAliases,
+        r->nRadioGroups,
+        r->which,
+        &list);
+    }
+
+    const int length =
+      xcb_xkb_get_names_value_list_key_names_length(r, &list);
+    xcb_xkb_key_name_iterator_t iter =
+      xcb_xkb_get_names_value_list_key_names_iterator(r, &list);
+
+    for (int i = 0; i < length; i++)
+    {
+      xcb_xkb_key_name_t *key_name = iter.data;
+      strncpy(this.keyMap[i], key_name->name, 4);
+      xcb_xkb_key_name_next(&iter);
+    }
+
+    free(r);
+  }
+
   this.fd = xcb_get_file_descriptor(this.xcb);
   return status;
 
@@ -280,7 +355,7 @@ static ADL_STATUS xcbDeinitialize()
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
+static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 {
   const uint32_t eventMask =
     XCB_EVENT_MASK_EXPOSURE         |
@@ -344,28 +419,28 @@ ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowDestroy(ADLWindow * window)
+static ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_destroy_window(this.xcb, data->window);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowShow(ADLWindow * window)
+static ADL_STATUS xcbWindowShow(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_map_window(this.xcb, data->window);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowHide(ADLWindow * window)
+static ADL_STATUS xcbWindowHide(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_unmap_window(this.xcb, data->window);
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
+static ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_window_t win  = data->window;
@@ -393,7 +468,8 @@ ADL_STATUS xcbWindowSetTitle(ADLWindow * window, const char * title)
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className)
+static ADL_STATUS xcbWindowSetClassName(ADLWindow * window,
+    const char * className)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_window_t win  = data->window;
@@ -411,7 +487,7 @@ ADL_STATUS xcbWindowSetClassName(ADLWindow * window, const char * className)
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
+static ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   xcb_window_t win  = data->window;
@@ -456,7 +532,7 @@ ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
   return ADL_OK;
 }
 
-ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
+static ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   if (data->relative == enable)
@@ -576,9 +652,10 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     case XCB_KEY_PRESS:
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
-      event->type           = ADL_EVENT_KEY_DOWN;
-      event->window         = windowFindById(e->event);
-      event->u.key.scancode = e->detail;
+      event->type            = ADL_EVENT_KEY_DOWN;
+      event->window          = windowFindById(e->event);
+      event->u.key.keyname   = this.keyMap[e->detail - 8];
+      event->u.key.scancode  = e->detail - 8;
       break;
     }
 
@@ -587,7 +664,8 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
       event->window         = windowFindById(e->event);
-      event->u.key.scancode = e->detail;
+      event->u.key.keyname  = this.keyMap[e->detail - 8];
+      event->u.key.scancode = e->detail - 8;
       break;
     }
 
@@ -595,28 +673,30 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
+
       event->window    = windowFindById(e->event);
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
       switch(e->detail)
       {
-        case 1: this.mouseButtonState |= ADL_MOUSE_BUTTON_LEFT   ; break;
-        case 2: this.mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE ; break;
-        case 3: this.mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT  ; break;
+        case 1: data->mouseButtonState |= ADL_MOUSE_BUTTON_LEFT   ; break;
+        case 2: data->mouseButtonState |= ADL_MOUSE_BUTTON_MIDDLE ; break;
+        case 3: data->mouseButtonState |= ADL_MOUSE_BUTTON_RIGHT  ; break;
         case 4: break;
         case 5: break;
         case 6: break;
         case 7: break;
-        case 8: this.mouseButtonState |= ADL_MOUSE_BUTTON_BACK   ; break;
-        case 9: this.mouseButtonState |= ADL_MOUSE_BUTTON_FORWARD; break;
+        case 8: data->mouseButtonState |= ADL_MOUSE_BUTTON_BACK   ; break;
+        case 9: data->mouseButtonState |= ADL_MOUSE_BUTTON_FORWARD; break;
         default:
           // custom buttons
-          this.mouseButtonState |= ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
+          data->mouseButtonState |= ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
           break;
       }
 
-      event->u.mouse.buttons = this.mouseButtonState;
+      event->u.mouse.buttons = data->mouseButtonState;
       switch(e->detail)
       {
         case 4: event->u.mouse.buttons |= ADL_MOUSE_BUTTON_WUP   ; break;
@@ -632,23 +712,25 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
       event->window    = windowFindById(e->event);
+
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
 
       switch(e->detail)
       {
-        case 1: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_LEFT   ; break;
-        case 2: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_MIDDLE ; break;
-        case 3: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_RIGHT  ; break;
-        case 8: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_BACK   ; break;
-        case 9: this.mouseButtonState &= ~ADL_MOUSE_BUTTON_FORWARD; break;
+        case 1: data->mouseButtonState &= ~ADL_MOUSE_BUTTON_LEFT   ; break;
+        case 2: data->mouseButtonState &= ~ADL_MOUSE_BUTTON_MIDDLE ; break;
+        case 3: data->mouseButtonState &= ~ADL_MOUSE_BUTTON_RIGHT  ; break;
+        case 8: data->mouseButtonState &= ~ADL_MOUSE_BUTTON_BACK   ; break;
+        case 9: data->mouseButtonState &= ~ADL_MOUSE_BUTTON_FORWARD; break;
         default:
           // custom buttons
-          this.mouseButtonState &= ~ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
+          data->mouseButtonState &= ~ADL_MOUSE_BUTTON_CUSTOM | (1 << e->detail);
           break;
       }
 
-      event->u.mouse.buttons = this.mouseButtonState;
+      event->u.mouse.buttons = data->mouseButtonState;
       break;
     }
 
@@ -657,56 +739,43 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
       event->window          = windowFindById(e->event);
+
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x       = e->event_x;
       event->u.mouse.y       = e->event_y;
-      event->u.mouse.buttons = this.mouseButtonState;
+      event->u.mouse.buttons = data->mouseButtonState;
+      event->u.mouse.warping = data->warping;
 
-      /* check for relative mode */
-      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
-      if (data->relative)
+      data->pointerX = e->event_x;
+      data->pointerY = e->event_y;
+
+      /* check for warp completion */
+      if (data->warping)
       {
-        /* waiting for the warp to complete */
-        if (data->warping)
+        /* if the warp completed */
+        if (xevent->sequence == data->warpCookie.sequence)
         {
-          /* if the warp completed */
-          if (e->event_x == data->warpMidX && e->event_y == data->warpMidY)
-          {
-            /* pass back the warp details for ADL to figure out */
-            event->u.mouse.warp  = true;
-            event->u.mouse.warpX = e->event_x - data->warpX;
-            event->u.mouse.warpY = e->event_y - data->warpY;
-            data->warping        = false;
-          }
-          else
-          {
-            data->warpX = e->event_x;
-            data->warpY = e->event_y;
-          }
+          /* pass back the warp details for ADL to figure out */
+          event->u.mouse.warp  = true;
+          event->u.mouse.warpX = e->event_x - data->warpX;
+          event->u.mouse.warpY = e->event_y - data->warpY;
+          data->warping        = false;
         }
         else
         {
-          const int midX = data->w >> 1;
-          const int midY = data->h >> 1;
-          const int offX = midX - e->event_x;
-          const int offY = midY - e->event_y;
+          data->warpX = e->event_x;
+          data->warpY = e->event_y;
+        }
+      }
 
-          /* check if we hit the warp threshold */
-          if (abs(offX) > 10 || abs(offY) > 10)
-          {
-            data->warping  = true;
-            data->warpMidX = midX;
-            data->warpMidY = midY;
-            data->warpX    = e->event_x;
-            data->warpY    = e->event_y;
-            xcb_warp_pointer(
-              this.xcb,
-              XCB_NONE,
-              data->window,
-              0, 0, 0, 0,
-              midX, midY
-            );
-            xcb_flush(this.xcb);
-          }
+      if (data->relative && !data->warping)
+      {
+        /* check if we hit the warp threshold */
+        if (abs((data->w >> 1) - e->event_x) > 10 ||
+            abs((data->h >> 1) - e->event_y) > 10)
+        {
+          xcbPointerWarp(event->window, data->w >> 1, data->h >> 1);
+          xcb_flush(this.xcb);
         }
       }
       break;
@@ -720,6 +789,25 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
 static ADL_STATUS xcbFlush()
 {
   xcb_flush(this.xcb);
+  return ADL_OK;
+}
+
+static ADL_STATUS xcbPointerWarp(ADLWindow * window, int x, int y)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+
+  data->warping    = true;
+  data->warpX      = data->pointerX;
+  data->warpY      = data->pointerY;
+  data->warpCookie =
+    xcb_warp_pointer(
+      this.xcb,
+      XCB_NONE,
+      data->window,
+      0, 0, 0, 0,
+      x, y
+    );
+
   return ADL_OK;
 }
 
@@ -746,7 +834,9 @@ static struct ADLPlatform xcb =
   .imageGetSupported  = xcbImageGetSupported,
   .imageCreate        = xcbImageCreate,
   .imageDestroy       = xcbImageDestroy,
-  .imageUpdate        = xcbImageUpdate
+  .imageUpdate        = xcbImageUpdate,
+
+  .pointerWarp        = xcbPointerWarp
 };
 
 adl_platform(xcb);

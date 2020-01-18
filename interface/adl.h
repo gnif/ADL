@@ -49,6 +49,9 @@ typedef ADL_STATUS (*ADLPfImageCreate      )(ADLWindow * window,
     const ADLImageDef def, ADLImage * result);
 typedef ADL_STATUS (*ADLPfImage            )(ADLImage * result);
 
+/* pointer functions */
+typedef ADL_STATUS (*ADLPfMouse)(ADLWindow * window, int x, int y);
+
 #define ADL_PLATFORM_FIELDS \
   ADL_FIELD(const char *     , name        ) \
   ADL_FIELD(ADLPf            , test        ) \
@@ -71,7 +74,9 @@ typedef ADL_STATUS (*ADLPfImage            )(ADLImage * result);
   ADL_FIELD(ADLPfImageGetSupported, imageGetSupported) \
   ADL_FIELD(ADLPfImageCreate      , imageCreate      ) \
   ADL_FIELD(ADLPfImage            , imageDestroy     ) \
-  ADL_FIELD(ADLPfImage            , imageUpdate      )
+  ADL_FIELD(ADLPfImage            , imageUpdate      ) \
+  \
+  ADL_FIELD(ADLPfMouse, pointerWarp)\
 
 #define ADL_FIELD(type, name) \
   type name;
