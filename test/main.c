@@ -57,7 +57,7 @@ int main()
     }
   }
 
-  /* Create a window and show it */
+  /* Create the parent window */
   ADLWindowDef winDef =
   {
     .title       = "ADL Test",
@@ -68,14 +68,37 @@ int main()
     .x           = 0  , .y = 0  ,
     .w           = 200, .h = 200
   };
-  ADLWindow * window;
-  if (adlWindowCreate(winDef, &window) != ADL_OK)
+  ADLWindow * parent;
+  if (adlWindowCreate(winDef, &parent) != ADL_OK)
   {
     retval = -1;
     goto err_shutdown;
   }
 
-  adlWindowShow(window);
+  /* create the child window */
+  ADLWindowDef childDef =
+  {
+    .parent     = parent,
+    .title      = "ADL Child Test",
+    .className  = "adl-test-child",
+    .type       = ADL_WINDOW_TYPE_NORMAL,
+    .flags      = 0,
+    .borderless = false,
+    .x          = 50,
+    .y          = 50,
+    .w          = 100,
+    .h          = 100
+  };
+  ADLWindow * child;
+  if (adlWindowCreate(childDef, &child) != ADL_OK)
+  {
+    retval = -1;
+    goto err_shutdown;
+  }
+
+  /* show the windows */
+  adlWindowShow(parent);
+  adlWindowShow(child);
   adlFlush();
 
   /* Process events */
@@ -84,63 +107,76 @@ int main()
   bool grabMode = false;
   while((status = adlProcessEvent(1, &event)) == ADL_OK)
   {
+    const char * src;
+    if (event.type != ADL_EVENT_NONE)
+    {
+      if (event.window == parent)
+        src = "p";
+      else if (event.window == child)
+        src = "c";
+      else
+        src = "u";
+    }
+
     switch(event.type)
     {
       case ADL_EVENT_NONE:
         continue;
 
       case ADL_EVENT_CLOSE:
-        printf("close event\n");
+        printf("%s: close event\n", src);
         goto exit;
 
       case ADL_EVENT_SHOW:
-        printf("show event\n");
+        printf("%s: show event\n", src);
         break;
 
       case ADL_EVENT_HIDE:
-        printf("hide event\n");
+        printf("%s: hide event\n", src);
         break;
 
       case ADL_EVENT_WINDOW_CHANGE:
-        printf("change event: x:%-4d y:%-4d w:%-4d h:%-4d\n",
+        printf("%s: change event: x:%-4d y:%-4d w:%-4d h:%-4d\n",
+            src,
             event.u.win.x, event.u.win.y,
             event.u.win.w, event.u.win.h);
         break;
 
       case ADL_EVENT_KEY_DOWN:
-        printf("key down: %03d %s\n", event.u.key.scancode, event.u.key.keyname);
+        printf("%s: key down: %03d %s\n", src,
+            event.u.key.scancode, event.u.key.keyname);
         // scroll lock key
         if (event.u.key.scancode == 70)
         {
           grabMode = !grabMode;
-          adlWindowSetGrab    (window, grabMode);
-          adlWindowSetRelative(window, grabMode);
-          printf("grab is %sabled\n", grabMode ? "en" : "dis");
+          adlWindowSetGrab    (event.window, grabMode);
+          adlWindowSetRelative(event.window, grabMode);
+          printf("%s: grab is %sabled\n", src, grabMode ? "en" : "dis");
         }
         break;
 
       case ADL_EVENT_KEY_UP:
-//        printf("key up: %x\n", event.u.key.scancode);
+        printf("%s: key up: %x\n", src, event.u.key.scancode);
         if (event.u.key.scancode == 1)
           goto exit;
         break;
 
       case ADL_EVENT_MOUSE_DOWN:
-        printf("down: %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
+        printf("%s: down: %4d %4d %08x\n", src, event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.buttons);
         break;
 
       case ADL_EVENT_MOUSE_UP:
-        printf("up  : %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
+        printf("%s: up  : %4d %4d %08x\n", src, event.u.mouse.x, event.u.mouse.y,
             event.u.mouse.buttons);
         break;
 
       case ADL_EVENT_MOUSE_MOVE:
-        /*
-        printf("move: %4d %4d %4d %4d %08x\n", event.u.mouse.x, event.u.mouse.y,
+        printf("%s: move: %4d %4d %4d %4d %08x\n", src,
+            event.u.mouse.x,
+            event.u.mouse.y,
             event.u.mouse.relX, event.u.mouse.relY,
             event.u.mouse.buttons);
-            */
         break;
 
       default:

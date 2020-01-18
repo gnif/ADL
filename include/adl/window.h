@@ -67,11 +67,14 @@ typedef enum
 }
 ADLWindowType;
 
+typedef struct _ADLWindow ADLWindow;
+
 /**
  * Parameters for a new window
  */
 typedef struct
 {
+  ADLWindow *   parent; // null if a top level window
   const char *  title;
   const char *  className;
   ADLWindowType type;
@@ -82,16 +85,16 @@ typedef struct
 }
 ADLWindowDef;
 
-typedef struct
+struct _ADLWindow
 {
+  ADLWindow *  parent;
   int          x, y;
   unsigned int w, h;
   bool         visible;
 
   bool haveMousePos;
   int  mouseX, mouseY;
-}
-ADLWindow;
+};
 
 ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);
 ADL_STATUS adlWindowDestroy(ADLWindow ** window);

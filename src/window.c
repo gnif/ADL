@@ -83,11 +83,11 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
   }
 
   ADLWindow * win = &item->window;
-
-  win->x = def.x;
-  win->y = def.y;
-  win->w = def.w;
-  win->h = def.h;
+  win->parent = def.parent;
+  win->x      = def.x;
+  win->y      = def.y;
+  win->w      = def.w;
+  win->h      = def.h;
 
   status = adl.platform->windowCreate(def, win);
   if (status == ADL_OK && (!ADL_GET_WINDOW_DATA(win)))

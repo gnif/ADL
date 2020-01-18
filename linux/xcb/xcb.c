@@ -432,18 +432,25 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   if (def.flags & ADL_WINDOW_FLAG_CENTER)
     values[1] = XCB_GRAVITY_CENTER;
 
+  xcb_window_t parent = this.screen->root;
+  if (def.parent)
+  {
+    WindowData * pdata = ADL_GET_WINDOW_DATA(def.parent);
+    parent = pdata->window;
+  }
+
   xcb_window_t window = xcb_generate_id(this.xcb);
   xcb_void_cookie_t c =
     xcb_create_window_checked(
       this.xcb,
       XCB_COPY_FROM_PARENT,
       window,
-      this.screen->root,
+      parent,
       def.x, def.y,
       def.w, def.h,
       0,
       XCB_WINDOW_CLASS_INPUT_OUTPUT,
-      this.screen->root_visual,
+      XCB_COPY_FROM_PARENT,
       XCB_CW_BACK_PIXEL | XCB_CW_WIN_GRAVITY | XCB_CW_EVENT_MASK,
       values
     );
@@ -663,7 +670,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_SHOW;
-      event->window = windowFindById(e->window);
+      event->window = windowFindById(e->event);
       break;
     }
 
@@ -671,7 +678,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_map_notify_event_t * e = (xcb_map_notify_event_t *)xevent;
       event->type   = ADL_EVENT_HIDE;
-      event->window = windowFindById(e->window);
+      event->window = windowFindById(e->event);
       break;
     }
 
@@ -725,7 +732,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_press_event_t * e = (xcb_key_press_event_t *)xevent;
       event->type            = ADL_EVENT_KEY_DOWN;
-      event->window          = windowFindById(e->event);
+      event->window          = windowFindById(e->child ? e->child : e->event);
       event->u.key.keyname   = this.keyMap[e->detail - 8];
       event->u.key.scancode  = e->detail - 8;
       break;
@@ -735,7 +742,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_key_release_event_t * e = (xcb_key_release_event_t *)xevent;
       event->type           = ADL_EVENT_KEY_UP;
-      event->window         = windowFindById(e->event);
+      event->window         = windowFindById(e->child ? e->child : e->event);
       event->u.key.keyname  = this.keyMap[e->detail - 8];
       event->u.key.scancode = e->detail - 8;
       break;
@@ -746,7 +753,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       xcb_button_press_event_t * e = (xcb_button_press_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_DOWN;
 
-      event->window    = windowFindById(e->event);
+      event->window    = windowFindById(e->child ? e->child : e->event);
       WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x = e->event_x;
       event->u.mouse.y = e->event_y;
@@ -783,7 +790,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_button_release_event_t * e = (xcb_button_release_event_t *)xevent;
       event->type      = ADL_EVENT_MOUSE_UP;
-      event->window    = windowFindById(e->event);
+      event->window    = windowFindById(e->child ? e->child : e->event);
 
       WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x = e->event_x;
@@ -810,7 +817,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     {
       xcb_motion_notify_event_t * e = (xcb_motion_notify_event_t *)xevent;
       event->type            = ADL_EVENT_MOUSE_MOVE;
-      event->window          = windowFindById(e->event);
+      event->window          = windowFindById(e->child ? e->child : e->event);
 
       WindowData *data = ADL_GET_WINDOW_DATA(event->window);
       event->u.mouse.x       = e->event_x;
