@@ -832,7 +832,7 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       if (data->warping)
       {
         /* if the warp completed */
-        if (xevent->sequence >= data->warpCookie.sequence)
+        if (xevent->full_sequence >= data->warpCookie.sequence)
         {
           /* pass back the warp details for ADL to figure out */
           event->u.mouse.warp  = true;
