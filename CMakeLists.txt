@@ -9,6 +9,13 @@ find_package(PkgConfig)
 include_directories(include)
 link_libraries(${CMAKE_DL_LIBS})
 
+if(UNIX)
+  set(PLATFORM "linux")
+elseif(WIN32)
+  set(PLATFORM "win32")
+endif(UNIX)
+
+
 set(SOURCES
   src/adl.c
   src/window.c
@@ -16,6 +23,7 @@ set(SOURCES
   src/status.c  
   src/logging.c
   src/linkedlist.c
+  ${PLATFORM}/util.c
 )
 
 pkg_check_modules(XCB

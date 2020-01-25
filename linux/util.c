@@ -22,23 +22,21 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL
-#define _H_ADL
+#include "adl/util.h"
 
-#include "status.h"
-#include "window.h"
-#include "event.h"
-#include "image.h"
-#include "util.h"
+#include <assert.h>
+#include <time.h>
 
-ADL_STATUS adlInitialize();
-ADL_STATUS adlShutdown();
+uint64_t adlGetClockMS(void)
+{
+  struct timespec time;
+  assert(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
+  return (uint64_t)time.tv_sec * 1000LL + time.tv_nsec / 1000000LL;
+}
 
-ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
-ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
-ADL_STATUS adlFlush(void);
-
-ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
-
-#endif
+uint64_t adlGetClockNS(void)
+{
+  struct timespec time;
+  assert(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
+  return (uint64_t)time.tv_sec * 10000LL + time.tv_nsec;
+}

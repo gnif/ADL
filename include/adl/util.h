@@ -22,23 +22,11 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL
-#define _H_ADL
+#ifndef _H_ADL_UTIL
 
-#include "status.h"
-#include "window.h"
-#include "event.h"
-#include "image.h"
-#include "util.h"
+#include <stdint.h>
 
-ADL_STATUS adlInitialize();
-ADL_STATUS adlShutdown();
-
-ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
-ADL_STATUS adlUsePlatform(const char * name);
-ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
-ADL_STATUS adlFlush(void);
-
-ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
+uint64_t adlGetClockMS(void);
+uint64_t adlGetClockUS(void);
 
 #endif
