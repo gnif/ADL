@@ -837,8 +837,8 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
       if (data->relative && !data->warping)
       {
         /* check if we hit the warp threshold */
-        if (abs((data->w >> 1) - e->event_x) > 10 ||
-            abs((data->h >> 1) - e->event_y) > 10)
+        if (abs((data->w >> 1) - e->event_x) > (data->w >> 2) ||
+            abs((data->h >> 1) - e->event_y) > (data->h >> 2))
         {
           xcbPointerWarp(event->window, data->w >> 1, data->h >> 1);
           xcb_flush(this.xcb);
