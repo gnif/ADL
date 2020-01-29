@@ -896,6 +896,15 @@ static ADL_STATUS xcbPointerVisible(ADLWindow * window, bool visible)
   return ADL_OK;
 }
 
+static ADL_STATUS xcbWindowSetFocus(ADLWindow * window)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_set_input_focus(this.xcb, XCB_INPUT_FOCUS_PARENT, data->window,
+      XCB_CURRENT_TIME);
+  xcb_flush(this.xcb);
+  return ADL_OK;
+}
+
 static struct ADLPlatform xcb =
 {
   .name               = "XCB",
@@ -914,6 +923,7 @@ static struct ADLPlatform xcb =
   .windowSetClassName = xcbWindowSetClassName,
   .windowSetGrab      = xcbWindowSetGrab,
   .windowSetRelative  = xcbWindowSetRelative,
+  .windowSetFocus     = xcbWindowSetFocus,
 
   .imageDataSize      = sizeof(ImageData),
   .imageGetSupported  = xcbImageGetSupported,

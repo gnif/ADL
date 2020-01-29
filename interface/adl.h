@@ -69,6 +69,7 @@ typedef ADL_STATUS (*ADLPfMouse)(ADLWindow * window, int x, int y);
   ADL_FIELD(ADLPfWindowSetStr , windowSetClassName) \
   ADL_FIELD(ADLPfWindowSetBool, windowSetGrab     ) \
   ADL_FIELD(ADLPfWindowSetBool, windowSetRelative ) \
+  ADL_FIELD(ADLPfWindow       , windowSetFocus    ) \
   \
   ADL_FIELD(size_t                , imageDataSize    ) \
   ADL_FIELD(ADLPfImageGetSupported, imageGetSupported) \

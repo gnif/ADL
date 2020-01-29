@@ -159,3 +159,10 @@ ADL_STATUS adlWindowSetRelative(ADLWindow * window, bool enable)
   ADL_NOT_NULL_CHECK(window);
   return adl.platform->windowSetRelative(window, enable);
 }
+
+ADL_STATUS adlWindowSetFocus(ADLWindow * window)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+  return adl.platform->windowSetFocus(window);
+}

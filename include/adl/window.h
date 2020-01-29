@@ -104,5 +104,6 @@ ADL_STATUS adlWindowSetTitle(ADLWindow * window, const char * title);
 ADL_STATUS adlWindowSetClassName(ADLWindow * window, const char * className);
 ADL_STATUS adlWindowSetGrab(ADLWindow * window, bool enable);
 ADL_STATUS adlWindowSetRelative(ADLWindow * window, bool enable);
+ADL_STATUS adlWindowSetFocus(ADLWindow * window);
 
 #endif
