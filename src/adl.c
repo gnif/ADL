@@ -323,3 +323,11 @@ ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y)
 
   return adl.platform->pointerWarp(window, x, y);
 }
+
+ADL_STATUS adlPointerVisible(ADLWindow * window, bool visible)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+
+  return adl.platform->pointerVisible(window, visible);
+}

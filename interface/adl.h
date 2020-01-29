@@ -76,7 +76,8 @@ typedef ADL_STATUS (*ADLPfMouse)(ADLWindow * window, int x, int y);
   ADL_FIELD(ADLPfImage            , imageDestroy     ) \
   ADL_FIELD(ADLPfImage            , imageUpdate      ) \
   \
-  ADL_FIELD(ADLPfMouse, pointerWarp)\
+  ADL_FIELD(ADLPfMouse        , pointerWarp)\
+  ADL_FIELD(ADLPfWindowSetBool, pointerVisible)\
 
 #define ADL_FIELD(type, name) \
   type name;

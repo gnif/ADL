@@ -40,5 +40,6 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event);
 ADL_STATUS adlFlush(void);
 
 ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
+ADL_STATUS adlPointerVisible(ADLWindow * window, bool visible);
 
 #endif

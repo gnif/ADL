@@ -604,19 +604,6 @@ static ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
     return ADL_OK;
 
   data->relative = enable;
-
-  if (enable)
-  {
-    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
-        &this.blankPointer);
-  }
-  else
-  {
-    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
-        &this.defaultPointer);
-  }
-
-  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
@@ -890,6 +877,25 @@ static ADL_STATUS xcbPointerWarp(ADLWindow * window, int x, int y)
   return ADL_OK;
 }
 
+static ADL_STATUS xcbPointerVisible(ADLWindow * window, bool visible)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+
+  if (visible)
+  {
+    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
+        &this.defaultPointer);
+  }
+  else
+  {
+    xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
+        &this.blankPointer);
+  }
+
+  xcb_flush(this.xcb);
+  return ADL_OK;
+}
+
 static struct ADLPlatform xcb =
 {
   .name               = "XCB",
@@ -915,7 +921,8 @@ static struct ADLPlatform xcb =
   .imageDestroy       = xcbImageDestroy,
   .imageUpdate        = xcbImageUpdate,
 
-  .pointerWarp        = xcbPointerWarp
+  .pointerWarp        = xcbPointerWarp,
+  .pointerVisible     = xcbPointerVisible
 };
 
 adl_platform(xcb);
