@@ -471,6 +471,8 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 
   /* setup the local window data */
   data->eventMask      = eventMask;
+  data->window         = window;
+  data->currentPointer = this.defaultPointer;
 
   /* register for close events */
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
@@ -486,6 +488,10 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
 static ADL_STATUS xcbWindowDestroy(ADLWindow * window)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
+
+  if (data->currentPointer != this.defaultPointer)
+    xcb_free_cursor(this.xcb, data->currentPointer);
+
   xcb_destroy_window(this.xcb, data->window);
   return ADL_OK;
 }
@@ -603,6 +609,15 @@ static ADL_STATUS xcbWindowSetRelative(ADLWindow * window, bool enable)
     return ADL_OK;
 
   data->relative = enable;
+  return ADL_OK;
+}
+
+static ADL_STATUS xcbWindowSetFocus(ADLWindow * window)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  xcb_set_input_focus(this.xcb, XCB_INPUT_FOCUS_PARENT, data->window,
+      XCB_CURRENT_TIME);
+  xcb_flush(this.xcb);
   return ADL_OK;
 }
 
@@ -883,7 +898,7 @@ static ADL_STATUS xcbPointerVisible(ADLWindow * window, bool visible)
   if (visible)
   {
     xcb_change_window_attributes(this.xcb, data->window, XCB_CW_CURSOR,
-        &this.defaultPointer);
+        &(data->currentPointer));
   }
   else
   {
@@ -895,11 +910,28 @@ static ADL_STATUS xcbPointerVisible(ADLWindow * window, bool visible)
   return ADL_OK;
 }
 
-static ADL_STATUS xcbWindowSetFocus(ADLWindow * window)
+static ADL_STATUS xcbPointerSetCursor(ADLWindow * window, ADLImage * source,
+    ADLImage * mask, int x, int y)
 {
-  WindowData * data = ADL_GET_WINDOW_DATA(window);
-  xcb_set_input_focus(this.xcb, XCB_INPUT_FOCUS_PARENT, data->window,
-      XCB_CURRENT_TIME);
+  WindowData * wData = ADL_GET_WINDOW_DATA(window);
+  ImageData *  sData = ADL_GET_IMAGE_DATA(source );
+  ImageData *  mData = ADL_GET_IMAGE_DATA(mask   );
+
+  xcb_cursor_t cid = xcb_generate_id(this.xcb);
+  xcb_create_cursor(
+    this.xcb,
+    cid,
+    sData->pixmap,
+    mData->pixmap,
+    0, 0, 0,
+    0, 0, 0,
+    x, y);
+
+  if (wData->currentPointer != this.defaultPointer)
+    xcb_free_cursor(this.xcb, wData->currentPointer);
+
+  wData->currentPointer = cid;
+  xcb_change_window_attributes(this.xcb, wData->window, XCB_CW_CURSOR, &cid);
   xcb_flush(this.xcb);
   return ADL_OK;
 }
@@ -931,7 +963,8 @@ static struct ADLPlatform xcb =
   .imageUpdate        = xcbImageUpdate,
 
   .pointerWarp        = xcbPointerWarp,
-  .pointerVisible     = xcbPointerVisible
+  .pointerVisible     = xcbPointerVisible,
+  .pointerSetCursor   = xcbPointerSetCursor
 };
 
 adl_platform(xcb);

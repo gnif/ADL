@@ -331,3 +331,13 @@ ADL_STATUS adlPointerVisible(ADLWindow * window, bool visible)
 
   return adl.platform->pointerVisible(window, visible);
 }
+
+ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
+    ADLImage * mask, int x, int y)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(source);
+  ADL_NOT_NULL_CHECK(mask);
+
+  return adl.platform->pointerSetCursor(window, source, mask, x, y);
+}

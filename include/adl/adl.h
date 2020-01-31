@@ -41,5 +41,7 @@ ADL_STATUS adlFlush(void);
 
 ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
 ADL_STATUS adlPointerVisible(ADLWindow * window, bool visible);
+ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
+    ADLImage * mask, int x, int y);
 
 #endif

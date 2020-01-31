@@ -60,6 +60,7 @@ typedef struct
   int x, y, w, h;
 
   // pointer state information
+  xcb_cursor_t   currentPointer;
   int            pointerX, pointerY;
   ADLMouseButton mouseButtonState;
 
