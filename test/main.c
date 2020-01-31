@@ -179,6 +179,22 @@ int main()
             event.u.mouse.buttons);
         break;
 
+      case ADL_EVENT_MOUSE_ENTER:
+        printf("%s: enter: %4d %4d %4d %4d %08x\n", src,
+            event.u.mouse.x,
+            event.u.mouse.y,
+            event.u.mouse.relX, event.u.mouse.relY,
+            event.u.mouse.buttons);
+        break;
+
+      case ADL_EVENT_MOUSE_LEAVE:
+        printf("%s: leave: %4d %4d %4d %4d %08x\n", src,
+            event.u.mouse.x,
+            event.u.mouse.y,
+            event.u.mouse.relX, event.u.mouse.relY,
+            event.u.mouse.buttons);
+        break;
+
       default:
         printf("Unhandled message: %u\n", event.type);
         break;

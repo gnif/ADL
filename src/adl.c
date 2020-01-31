@@ -245,9 +245,11 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
       window->visible = false;
       break;
 
-    case ADL_EVENT_MOUSE_MOVE:
-    case ADL_EVENT_MOUSE_DOWN:
-    case ADL_EVENT_MOUSE_UP  :
+    case ADL_EVENT_MOUSE_MOVE :
+    case ADL_EVENT_MOUSE_DOWN :
+    case ADL_EVENT_MOUSE_UP   :
+    case ADL_EVENT_MOUSE_ENTER:
+    case ADL_EVENT_MOUSE_LEAVE:
       if (!window)
         break;
 

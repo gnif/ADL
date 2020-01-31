@@ -420,7 +420,8 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_VISIBILITY_CHANGE |
     XCB_EVENT_MASK_KEY_PRESS        | XCB_EVENT_MASK_KEY_RELEASE       |
     XCB_EVENT_MASK_BUTTON_PRESS     | XCB_EVENT_MASK_BUTTON_RELEASE    |
-    XCB_EVENT_MASK_POINTER_MOTION;
+    XCB_EVENT_MASK_POINTER_MOTION   | XCB_EVENT_MASK_ENTER_WINDOW      |
+    XCB_EVENT_MASK_LEAVE_WINDOW;
 
   uint32_t values[3] =
   {
@@ -858,6 +859,42 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
           xcb_flush(this.xcb);
         }
       }
+      break;
+    }
+
+    case XCB_ENTER_NOTIFY:
+    {
+      xcb_enter_notify_event_t * e = (xcb_enter_notify_event_t *)xevent;
+
+      event->type   = ADL_EVENT_MOUSE_ENTER;
+      event->window = windowFindById(e->child ? e->child : e->event);
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
+
+      event->u.mouse.x       = e->event_x;
+      event->u.mouse.y       = e->event_y;
+      event->u.mouse.buttons = data->mouseButtonState;
+      event->u.mouse.warping = data->warping;
+
+      data->pointerX = e->event_x;
+      data->pointerY = e->event_y;
+      break;
+    }
+
+    case XCB_LEAVE_NOTIFY:
+    {
+      xcb_leave_notify_event_t * e = (xcb_leave_notify_event_t *)xevent;
+
+      event->type   = ADL_EVENT_MOUSE_LEAVE;
+      event->window = windowFindById(e->child ? e->child : e->event);
+      WindowData *data = ADL_GET_WINDOW_DATA(event->window);
+
+      event->u.mouse.x       = e->event_x;
+      event->u.mouse.y       = e->event_y;
+      event->u.mouse.buttons = data->mouseButtonState;
+      event->u.mouse.warping = data->warping;
+
+      data->pointerX = e->event_x;
+      data->pointerY = e->event_y;
       break;
     }
   }
