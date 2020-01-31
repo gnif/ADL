@@ -467,11 +467,10 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   /* set the window's ID and get the window data */
   ADL_SET_WINDOW_ID(result, window);
   WindowData * data = ADL_GET_WINDOW_DATA(result);
-  data->eventMask   = eventMask;
+  memset(data, 0, sizeof(WindowData));
 
   /* setup the local window data */
-  memset(data, 0, sizeof(WindowData));
-  data->window = window;
+  data->eventMask      = eventMask;
 
   /* register for close events */
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
