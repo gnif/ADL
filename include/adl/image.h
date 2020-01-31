@@ -57,7 +57,7 @@ typedef struct
   ADLImageFormat  format;  // the image format
   unsigned int    bpp;     // ie: 24 for 24 in 32-bit
   unsigned int    depth;   // ie: 32 for 24 in 32-bit
-  unsigned int    stride;  // number of bytes in a single row including padding
+  unsigned int    pitch;   // number of bytes in a single row including padding
   unsigned int    w;       // width
   unsigned int    h;       // height
   union
