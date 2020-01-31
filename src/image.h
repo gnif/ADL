@@ -35,7 +35,6 @@ typedef struct
 {
   ADLLinkedListItem item;
 
-  ADLWindow  * window;
   ADLImageId   id;
   ADLImage     image;
 }
@@ -54,11 +53,8 @@ ADLImageListItem;
 #define ADL_GET_IMAGE_DATA(x) \
   ((void *)(ADL_IMAGE_GET_LIST_ITEM(x)+1))
 
-#define ADL_GET_IMAGE_WINDOW(x) \
-  ADL_IMAGE_GET_LIST_ITEM(x)->window
-
 #define ADL_GET_IMAGE_LIST(x) \
-  ADL_GET_WINDOW_IMAGE_LIST(ADL_GET_IMAGE_WINDOW(x))
+  ADL_GET_WINDOW_IMAGE_LIST((x)->window)
 
 void imageListItemDestructor(ADLLinkedListItem * item);
 ADLImage * imageFindById(ADLWindow * window, ADLImageId id);
