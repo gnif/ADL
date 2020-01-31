@@ -28,7 +28,6 @@
 #include <inttypes.h>
 
 #include "adl/logging.h"
-#include "adl/util.h"
 
 struct ADLLogHandlers adlLogHandlers;
 
@@ -60,26 +59,27 @@ struct ADLLogHandlers adlLogHandlers;
   sizeof(s) > 20 && (s)[sizeof(s)-21] == DIRECTORY_SEPARATOR ? (s) + sizeof(s) - 20 : \
   sizeof(s) > 21 && (s)[sizeof(s)-22] == DIRECTORY_SEPARATOR ? (s) + sizeof(s) - 21 : (s))
 
-#define DEBUG_PRINT(type, level, code, fmt, ...) \
+#define DEBUG_PRINT(type, level, status, fmt, ...) \
   do { \
-    adlLogHandlers.type(level, code, \
-      "%" PRId64 " | %20s:%-4u | %-30s | " fmt "\n", \
-      adlGetClockMS(), \
+    adlLogHandlers.type(\
+      level, \
+      status, \
       STRIPPATH(__FILE__), \
       __LINE__, \
       __FUNCTION__, \
+      fmt "\n", \
       ##__VA_ARGS__); \
   } while (0)
 
-#define DEBUG_INFO(code, fmt, ...)  \
-  DEBUG_PRINT(info , ADL_LOG_INFO , code, fmt, ##__VA_ARGS__)
-#define DEBUG_WARN(code, fmt, ...)  \
-  DEBUG_PRINT(warn , ADL_LOG_WARN , code, fmt, ##__VA_ARGS__)
-#define DEBUG_ERROR(code, fmt, ...) \
-  DEBUG_PRINT(err  , ADL_LOG_ERROR, code, fmt, ##__VA_ARGS__)
-#define DEBUG_BUG(code, fmt, ...)   \
-  DEBUG_PRINT(bug  , ADL_LOG_BUG  , code, fmt, ##__VA_ARGS__)
-#define DEBUG_FATAL(code, fmt, ...) \
-  DEBUG_PRINT(fatal, ADL_LOG_FATAL, code, fmt, ##__VA_ARGS__)
+#define DEBUG_INFO(status, fmt, ...)  \
+  DEBUG_PRINT(info , ADL_LOG_INFO , status, fmt, ##__VA_ARGS__)
+#define DEBUG_WARN(status, fmt, ...)  \
+  DEBUG_PRINT(warn , ADL_LOG_WARN , status, fmt, ##__VA_ARGS__)
+#define DEBUG_ERROR(status, fmt, ...) \
+  DEBUG_PRINT(err  , ADL_LOG_ERROR, status, fmt, ##__VA_ARGS__)
+#define DEBUG_BUG(status, fmt, ...)   \
+  DEBUG_PRINT(bug  , ADL_LOG_BUG  , status, fmt, ##__VA_ARGS__)
+#define DEBUG_FATAL(status, fmt, ...) \
+  DEBUG_PRINT(fatal, ADL_LOG_FATAL, status, fmt, ##__VA_ARGS__)
 
 #endif

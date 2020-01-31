@@ -27,19 +27,38 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
-static void adlLogStdout(ADL_LOG_LEVEL logLevel, unsigned int code,
-  const char * format, ...)
+#define ADL_LOG_FORMAT "%" PRId64 " | %20s:%-4u | %-30s | "
+
+static void adlLogStdout(
+  ADL_LOG_LEVEL loglevel,
+  ADL_STATUS    status,
+  const char *  file,
+  unsigned int  line,
+  const char *  function,
+  const char *  format,
+  ...)
 {
+  fprintf(stdout, ADL_LOG_FORMAT, adlGetClockMS(), file, line, function);
+
   va_list ap;
   va_start(ap, format);
   vfprintf(stdout, format, ap);
   va_end(ap);
 }
 
-static void adlLogStderr(ADL_LOG_LEVEL logLevel, unsigned int code,
-  const char * format, ...)
+static void adlLogStderr(
+  ADL_LOG_LEVEL loglevel,
+  ADL_STATUS    status,
+  const char *  file,
+  unsigned int  line,
+  const char *  function,
+  const char *  format,
+  ...)
 {
+  fprintf(stderr, ADL_LOG_FORMAT, adlGetClockMS(), file, line, function);
+
   va_list ap;
   va_start(ap, format);
   vfprintf(stderr, format, ap);

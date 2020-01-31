@@ -40,8 +40,15 @@ ADL_LOG_LEVEL;
 /**
  * Called by ADL to log status and error messages
  */
-typedef void (*ADLLogFn)(ADL_LOG_LEVEL logLevel, ADL_STATUS status,
-  const char * format, ...) __attribute__ ((format (printf, 3, 4)));
+typedef void (*ADLLogFn)(
+  ADL_LOG_LEVEL logLevel,
+  ADL_STATUS    status,
+  const char *  file,
+  unsigned int  line,
+  const char *  function,
+  const char *  format,
+  ...
+) __attribute__ ((format (printf, 6, 7)));
 
 struct ADLLogHandlers
 {
