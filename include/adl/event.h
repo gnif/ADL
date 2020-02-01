@@ -36,6 +36,7 @@ typedef enum
   ADL_EVENT_NONE,
 
   ADL_EVENT_CLOSE,
+  ADL_EVENT_PAINT,
   ADL_EVENT_SHOW,
   ADL_EVENT_HIDE,
   ADL_EVENT_WINDOW_CHANGE,
@@ -56,6 +57,13 @@ typedef struct
   int x, y, w, h;
 }
 ADLEventWindow;
+
+typedef struct
+{
+  int  x, y, w, h;
+  bool more;
+}
+ADLEventPaint;
 
 typedef struct
 {
@@ -108,6 +116,7 @@ typedef struct
   union
   {
     ADLEventWindow   win;
+    ADLEventPaint    paint;
     ADLEventKeyboard key;
     ADLEventMouse    mouse;
   } u;

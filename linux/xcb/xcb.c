@@ -421,7 +421,7 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
     XCB_EVENT_MASK_KEY_PRESS        | XCB_EVENT_MASK_KEY_RELEASE       |
     XCB_EVENT_MASK_BUTTON_PRESS     | XCB_EVENT_MASK_BUTTON_RELEASE    |
     XCB_EVENT_MASK_POINTER_MOTION   | XCB_EVENT_MASK_ENTER_WINDOW      |
-    XCB_EVENT_MASK_LEAVE_WINDOW;
+    XCB_EVENT_MASK_LEAVE_WINDOW     | XCB_EVENT_MASK_EXPOSURE;
 
   uint32_t values[3] =
   {
@@ -665,6 +665,19 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
 
       event->type   = ADL_EVENT_CLOSE;
       event->window = windowFindById(e->window);
+      break;
+    }
+
+    case XCB_EXPOSE:
+    {
+      xcb_expose_event_t * e = (xcb_expose_event_t *)xevent;
+      event->type   = ADL_EVENT_PAINT;
+      event->window = windowFindById(e->window);
+      event->u.paint.x    = e->x;
+      event->u.paint.y    = e->y;
+      event->u.paint.w    = e->width;
+      event->u.paint.h    = e->height;
+      event->u.paint.more = e->count > 0;
       break;
     }
 

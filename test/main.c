@@ -127,6 +127,14 @@ int main()
         printf("%s: close event\n", src);
         goto exit;
 
+      case ADL_EVENT_PAINT:
+        printf("%s: paint event: x:%-4d y:%-4d w:%-4d h:%-4d more:%s\n",
+            src,
+            event.u.paint.x, event.u.paint.y,
+            event.u.paint.w, event.u.paint.h,
+            event.u.paint.more ? "y" : "n");
+        break;
+
       case ADL_EVENT_SHOW:
         printf("%s: show event\n", src);
         break;
