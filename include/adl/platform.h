@@ -22,28 +22,15 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_STATUS
-#define _H_ADL_STATUS
+#ifndef _H_ADL_PLATFORM
+#define _H_ADL_PLATFORM
 
-typedef enum
-{
-  ADL_OK,
-  ADL_ERR_UNSUPPORTED,
-  ADL_ERR_NOT_INITIALIZED,
-  ADL_ERR_ALREADY_INITIALIZED,
-  ADL_ERR_INVALID_ARGUMENT,
-  ADL_ERR_INVALID_PLATFORM,
-  ADL_ERR_PLATFORM,
-  ADL_ERR_NO_MEM,
-  ADL_ERR_EMPTY,
-  ADL_ERR_FULL,
-  ADL_ERR_UNSUPPORTED_BACKEND,
-  ADL_ERR_UNSUPPORTED_FORMAT,
-  ADL_ERR_BUSY,
-  ADL_ERR_TIMEOUT
-}
-ADL_STATUS;
-
-const char * adlStatusString(const ADL_STATUS status);
+#if defined(ADL_PLATFORM_LINUX)
+#include "linux.h"
+#elif defined(ADL_PLATFORM_WIN32)
+#include "win32.h"
+#else
+#error "unsupported platform"
+#endif
 
 #endif

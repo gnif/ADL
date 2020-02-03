@@ -22,28 +22,13 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_STATUS
-#define _H_ADL_STATUS
+#ifndef _H_ADL_PLATFORM_LINUX
+#define _H_ADL_PLATFORM_LINUX
 
-typedef enum
-{
-  ADL_OK,
-  ADL_ERR_UNSUPPORTED,
-  ADL_ERR_NOT_INITIALIZED,
-  ADL_ERR_ALREADY_INITIALIZED,
-  ADL_ERR_INVALID_ARGUMENT,
-  ADL_ERR_INVALID_PLATFORM,
-  ADL_ERR_PLATFORM,
-  ADL_ERR_NO_MEM,
-  ADL_ERR_EMPTY,
-  ADL_ERR_FULL,
-  ADL_ERR_UNSUPPORTED_BACKEND,
-  ADL_ERR_UNSUPPORTED_FORMAT,
-  ADL_ERR_BUSY,
-  ADL_ERR_TIMEOUT
-}
-ADL_STATUS;
+#ifndef _H_ADL_PLATFORM
+#error "do not use this header directly"
+#endif
 
-const char * adlStatusString(const ADL_STATUS status);
+#include "linux/thread.h"
 
 #endif

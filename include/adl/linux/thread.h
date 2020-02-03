@@ -22,28 +22,32 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_STATUS
-#define _H_ADL_STATUS
+#ifndef _H_ADL_LINUX_THREAD
+#define _H_ADL_LINUX_THREAD
 
-typedef enum
+#ifndef _H_ADL_PLATFORM
+#error "do not include this header directly"
+#endif
+
+#include "../thread.h"
+#include <pthread.h>
+#include <stdatomic.h>
+
+typedef struct
 {
-  ADL_OK,
-  ADL_ERR_UNSUPPORTED,
-  ADL_ERR_NOT_INITIALIZED,
-  ADL_ERR_ALREADY_INITIALIZED,
-  ADL_ERR_INVALID_ARGUMENT,
-  ADL_ERR_INVALID_PLATFORM,
-  ADL_ERR_PLATFORM,
-  ADL_ERR_NO_MEM,
-  ADL_ERR_EMPTY,
-  ADL_ERR_FULL,
-  ADL_ERR_UNSUPPORTED_BACKEND,
-  ADL_ERR_UNSUPPORTED_FORMAT,
-  ADL_ERR_BUSY,
-  ADL_ERR_TIMEOUT
+  pthread_t   thread;
+  atomic_bool running;
 }
-ADL_STATUS;
+ADLThread;
 
-const char * adlStatusString(const ADL_STATUS status);
+static inline void adlThreadStop(ADLThread * thread)
+{
+  atomic_store(&thread->running, false);
+}
+
+static inline bool adlThreadIsRunning(ADLThread * thread)
+{
+  return atomic_load(&thread->running);
+}
 
 #endif

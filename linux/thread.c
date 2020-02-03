@@ -22,28 +22,47 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_STATUS
-#define _H_ADL_STATUS
+#include "adl/thread.h"
+#include <pthread.h>
+#include <stdatomic.h>
+#include <errno.h>
 
-typedef enum
+ADL_STATUS adlThreadCreate(ADLThreadFn fn, void * udata, ADLThread * result)
 {
-  ADL_OK,
-  ADL_ERR_UNSUPPORTED,
-  ADL_ERR_NOT_INITIALIZED,
-  ADL_ERR_ALREADY_INITIALIZED,
-  ADL_ERR_INVALID_ARGUMENT,
-  ADL_ERR_INVALID_PLATFORM,
-  ADL_ERR_PLATFORM,
-  ADL_ERR_NO_MEM,
-  ADL_ERR_EMPTY,
-  ADL_ERR_FULL,
-  ADL_ERR_UNSUPPORTED_BACKEND,
-  ADL_ERR_UNSUPPORTED_FORMAT,
-  ADL_ERR_BUSY,
-  ADL_ERR_TIMEOUT
+  atomic_store(&result->running, true);
+  if (pthread_create(&result->thread, NULL, fn, udata) != 0)
+    return ADL_ERR_PLATFORM;
+  return ADL_OK;
 }
-ADL_STATUS;
 
-const char * adlStatusString(const ADL_STATUS status);
+ADL_STATUS adlThreadJoin(ADLThread * thread, void ** result, int timeout)
+{
+  int ret;
 
-#endif
+  atomic_store(&thread->running, false);
+
+  if (timeout == 0)
+    ret = pthread_join(thread->thread, result);
+  else if (timeout < 0)
+  {
+    ret = pthread_tryjoin_np(thread->thread, result);
+    if (ret == EBUSY)
+      return ADL_ERR_BUSY;
+  }
+  else
+  {
+    const struct timespec ts =
+    {
+      .tv_sec  = timeout / 1000,
+      .tv_nsec = ((unsigned long)timeout % 1000) * 1000000
+    };
+    ret = pthread_timedjoin_np(thread->thread, result, &ts);
+    if (ret == ETIMEDOUT)
+      return ADL_ERR_TIMEOUT;
+  }
+
+  if (ret != 0)
+    return ADL_ERR_PLATFORM;
+
+  return ADL_OK;
+}
