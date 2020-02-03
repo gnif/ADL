@@ -33,10 +33,11 @@
 #include <pthread.h>
 #include <stdatomic.h>
 
-typedef struct
+typedef struct _ADLThread
 {
   pthread_t   thread;
   atomic_bool running;
+  void * (*function)(struct _ADLThread * thread, void * udata);
 }
 ADLThread;
 

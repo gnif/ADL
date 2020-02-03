@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include "platform.h"
 
-typedef void * (*ADLThreadFn)(void * udata);
+typedef void * (*ADLThreadFn)(ADLThread * thread, void * udata);
 
 /**
  * Create a new thread

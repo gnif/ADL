@@ -27,10 +27,17 @@
 #include <stdatomic.h>
 #include <errno.h>
 
+static void * threadFn(void * opaque)
+{
+  ADLThread * thread = (ADLThread *)opaque;
+  return thread->function(thread, opaque);
+}
+
 ADL_STATUS adlThreadCreate(ADLThreadFn fn, void * udata, ADLThread * result)
 {
+  result->function = fn;
   atomic_store(&result->running, true);
-  if (pthread_create(&result->thread, NULL, fn, udata) != 0)
+  if (pthread_create(&result->thread, NULL, threadFn, udata) != 0)
     return ADL_ERR_PLATFORM;
   return ADL_OK;
 }
