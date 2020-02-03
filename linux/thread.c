@@ -36,8 +36,9 @@ static void * threadFn(void * opaque)
 ADL_STATUS adlThreadCreate(ADLThreadFn fn, void * udata, ADLThread * result)
 {
   result->function = fn;
+  result->udata    = udata;
   atomic_store(&result->running, true);
-  if (pthread_create(&result->thread, NULL, threadFn, udata) != 0)
+  if (pthread_create(&result->thread, NULL, threadFn, result) != 0)
     return ADL_ERR_PLATFORM;
   return ADL_OK;
 }
