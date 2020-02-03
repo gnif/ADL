@@ -40,6 +40,8 @@ const char * adlStatusString(const ADL_STATUS status)
     case ADL_ERR_FULL               : return "ADL_ERR_FULL";
     case ADL_ERR_UNSUPPORTED_BACKEND: return "ADL_ERR_UNSUPPORTED_BACKEND";
     case ADL_ERR_UNSUPPORTED_FORMAT : return "ADL_ERR_UNSUPPORTED_FORMAT";
+    case ADL_ERR_BUSY               : return "ADL_ERR_BUSY";
+    case ADL_ERR_TIMEOUT            : return "ADL_ERR_TIMEOUT";
   }
 
   return "BUG: Invalid or Unknown ADL_STATUS";

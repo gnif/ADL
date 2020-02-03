@@ -30,6 +30,7 @@
 #include "event.h"
 #include "image.h"
 #include "util.h"
+#include "thread.h"
 
 ADL_STATUS adlInitialize();
 ADL_STATUS adlShutdown();

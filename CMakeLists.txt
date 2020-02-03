@@ -11,8 +11,11 @@ link_libraries(${CMAKE_DL_LIBS})
 
 if(UNIX)
   set(PLATFORM "linux")
+  add_definitions(-D ADL_PLATFORM_LINUX -D_GNU_SOURCE)
+  link_libraries(pthread)
 elseif(WIN32)
   set(PLATFORM "win32")
+  add_definitions(-D ADL_PLATFORM_WIN32)
 endif(UNIX)
 
 
@@ -24,6 +27,7 @@ set(SOURCES
   src/logging.c
   src/linkedlist.c
   ${PLATFORM}/util.c
+  ${PLATFORM}/thread.c
 )
 
 pkg_check_modules(XCB
