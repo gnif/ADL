@@ -11,13 +11,14 @@ link_libraries(${CMAKE_DL_LIBS})
 
 if(UNIX)
   set(PLATFORM "linux")
-  add_definitions(-D ADL_PLATFORM_LINUX -D_GNU_SOURCE)
+  set(PUBLIC_DEFS -D ADL_PLATFORM_LINUX)
+  set(PRIVATE_DEFS -D_GNU_SOURCE)
   link_libraries(pthread)
 elseif(WIN32)
   set(PLATFORM "win32")
-  add_definitions(-D ADL_PLATFORM_WIN32)
+  set(PUBLIC_DEFS -D ADL_PLATFORM_WIN32)
+  set(PRIVATE_DEFS)
 endif(UNIX)
-
 
 set(SOURCES
   src/adl.c
@@ -60,7 +61,7 @@ get_filename_component(PROJECT_TOP "${PROJECT_SOURCE_DIR}" ABSOLUTE)
 include_directories(${PROJECT_TOP})
 
 add_library(${TARGET_NAME} OBJECT ${SOURCES})
-#target_compile_options(${TARGET_NAME} PUBLIC -Wl,-r)
+target_compile_definitions(${TARGET_NAME} PRIVATE ${PRIVATE_DEFS} PUBLIC ${PUBLIC_DEFS})
 target_include_directories(${TARGET_NAME}
   INTERFACE
     include
