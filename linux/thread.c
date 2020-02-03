@@ -39,11 +39,9 @@ ADL_STATUS adlThreadJoin(ADLThread * thread, void ** result, int timeout)
 {
   int ret;
 
-  atomic_store(&thread->running, false);
-
-  if (timeout == 0)
+  if (timeout < 0)
     ret = pthread_join(thread->thread, result);
-  else if (timeout < 0)
+  else if (timeout == 0)
   {
     ret = pthread_tryjoin_np(thread->thread, result);
     if (ret == EBUSY)

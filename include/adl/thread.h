@@ -47,8 +47,8 @@ ADL_STATUS adlThreadCreate(ADLThreadFn fn, void * udata, ADLThread * result);
  * @param result The returned result from the thread
  * @param timeout The timeout in miliseconds to wait.
  *
- * If timeout is set to a negative value the call is non-blocking and returns
- * immediately, if timeout is zero then the timeout is infinite.
+ * If timeout zero the call is non-blocking and returns immediately, if timeout
+ * is negative then the timeout is infinite.
  */
 ADL_STATUS adlThreadJoin(ADLThread * thread, void ** result, int timeout);
 
