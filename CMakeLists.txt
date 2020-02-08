@@ -33,7 +33,7 @@ set(SOURCES
 
 find_package(OpenGL COMPONENTS EGL)
 if (OpenGL_EGL_FOUND)
-  list(APPEND PRIVATE_DEFS -DADL_HAS_EGL)
+  list(APPEND PUBLIC_DEFS -DADL_HAS_EGL)
   include_directories(${OPENGL_EGL_INCLUDE_DIRS})
   link_libraries(${OPENGL_egl_LIBRARY})
 endif(OpenGL_EGL_FOUND)
