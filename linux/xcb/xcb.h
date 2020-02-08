@@ -60,6 +60,7 @@ typedef struct
 
   // window position & size
   int x, y, w, h;
+  int bpp;
 
   // pointer state information
   xcb_cursor_t   currentPointer;

@@ -30,7 +30,7 @@
 
 typedef struct
 {
-  xcb_window_t window;
+  ADLWindow *  window;
   ADLImageDef  def;
 
   xcb_pixmap_t pixmap;

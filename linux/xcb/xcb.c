@@ -493,6 +493,19 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   data->window         = window;
   data->currentPointer = this.defaultPointer;
 
+  /* get the window bit depth */
+  {
+    xcb_get_geometry_cookie_t  c = xcb_get_geometry(this.xcb, window);
+    xcb_get_geometry_reply_t * r = xcb_get_geometry_reply(this.xcb, c, NULL);
+    if (!r)
+    {
+      xcb_destroy_window(this.xcb, window);
+      return ADL_ERR_PLATFORM;
+    }
+    data->bpp = r->depth;
+    free(r);
+  }
+
   /* register for close events */
   changeProperty(XCB_PROP_MODE_REPLACE, window, IA_WM_PROTOCOLS,
     IA_XCB_ATOM_ATOM, 32, 1, &internAtom[IA_WM_DELETE_WINDOW].atom);

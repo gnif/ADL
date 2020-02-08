@@ -18,25 +18,12 @@ ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
   WindowData * wdata = ADL_GET_WINDOW_DATA(window);
   ImageData  * idata = ADL_GET_IMAGE_DATA (result);
 
-  idata->window = wdata->window;
+  idata->window = window;
   idata->def    = def;
 
   /* for now we only support dmabuf */
   if (def.backend != ADL_IMAGE_BACKEND_DMABUF)
     return ADL_ERR_UNSUPPORTED_BACKEND;
-
-  /* check the bpp matches the window, this is required for xcb_present_pixmap */
-  {
-    xcb_get_geometry_cookie_t c =
-      xcb_get_geometry(this.xcb, idata->window);
-    xcb_get_geometry_reply_t * r =
-      xcb_get_geometry_reply(this.xcb, c, NULL);
-    if (!r)
-      return ADL_ERR_PLATFORM;
-    if (r->depth != def.bpp)
-      return ADL_ERR_UNSUPPORTED_FORMAT;
-    free(r);
-  }
 
   idata->pixmap = xcb_generate_id(this.xcb);
 
@@ -45,7 +32,7 @@ ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
       xcb_dri3_pixmap_from_buffer_checked(
         this.xcb,
         idata->pixmap,
-        idata->window,
+        wdata->window,
         def.h * def.pitch,
         def.w,
         def.h,
@@ -79,11 +66,15 @@ ADL_STATUS xcbImageDestroy(ADLImage * image)
 
 ADL_STATUS xcbImageUpdate(ADLImage * image)
 {
-  ImageData * idata = ADL_GET_IMAGE_DATA(image);
+  ImageData  * idata = ADL_GET_IMAGE_DATA(image);
+  WindowData * wdata = ADL_GET_WINDOW_DATA(idata->window);
+
+  if (idata->def.bpp != wdata->bpp)
+    return ADL_ERR_UNSUPPORTED_FORMAT;
 
   xcb_present_pixmap(
     this.xcb,
-    idata->window,
+    wdata->window,
     idata->pixmap,
     idata->serial++,
     0, // valid
