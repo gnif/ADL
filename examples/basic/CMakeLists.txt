@@ -15,7 +15,7 @@ add_compile_options(
   "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
 )
 
-get_filename_component(PROJECT_TOP "${PROJECT_SOURCE_DIR}/.." ABSOLUTE)
+get_filename_component(PROJECT_TOP "${PROJECT_SOURCE_DIR}/../.." ABSOLUTE)
 add_subdirectory("${PROJECT_TOP}" "${CMAKE_BINARY_DIR}/adl")
 
 add_executable(${TARGET_NAME} ${SOURCES})
