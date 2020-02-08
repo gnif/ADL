@@ -29,12 +29,14 @@
 #include "src/image.h"
 #include "src/window.h"
 
+#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xkb.h>
 #include <xcb/xcb_cursor.h>
 
 struct State
 {
+  Display *          display;
   xcb_connection_t * xcb;
   int                fd;
   xcb_screen_t *     screen;

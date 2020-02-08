@@ -32,6 +32,10 @@
 #include "util.h"
 #include "thread.h"
 
+#if defined(ADL_HAS_EGL)
+#include <EGL/egl.h>
+#endif
+
 ADL_STATUS adlInitialize();
 ADL_STATUS adlShutdown();
 
@@ -44,5 +48,11 @@ ADL_STATUS adlPointerWarp(ADLWindow * window, int x, int y);
 ADL_STATUS adlPointerVisible(ADLWindow * window, bool visible);
 ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
     ADLImage * mask, int x, int y);
+
+#if defined(ADL_HAS_EGL)
+ADL_STATUS adlEGLGetDisplay(EGLDisplay ** display);
+ADL_STATUS adlEGLCreateWindowSurface(EGLDisplay * display, EGLint * config,
+  ADLWindow * window, EGLint * attribs, EGLSurface ** surface);
+#endif
 
 #endif

@@ -31,6 +31,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#if defined(ADL_HAS_EGL)
+#include <EGL/egl.h>
+#endif
+
 /* platform functions */
 typedef ADL_STATUS (*ADLPf)(void);
 typedef ADL_STATUS (*ADLPfProcessEvent)
@@ -53,6 +57,13 @@ typedef ADL_STATUS (*ADLPfImage            )(ADLImage * result);
 typedef ADL_STATUS (*ADLPfPointer)(ADLWindow * window, int x, int y);
 typedef ADL_STATUS (*ADLPfPointerCursor)(ADLWindow * window, ADLImage * source,
     ADLImage * mask, int x, int y);
+
+#if defined(ADL_HAS_EGL)
+/* egl functions */
+typedef ADL_STATUS (*ADLPfEGLGetDisplay)(EGLDisplay ** display);
+typedef ADL_STATUS (*ADLPfEGLCreateWindowSurface)(EGLDisplay * display,
+  EGLint * config, ADLWindow * window, EGLint * attribs, EGLSurface ** surface);
+#endif
 
 #define ADL_PLATFORM_FIELDS \
   ADL_FIELD(const char *     , name        ) \
@@ -81,10 +92,18 @@ typedef ADL_STATUS (*ADLPfPointerCursor)(ADLWindow * window, ADLImage * source,
   \
   ADL_FIELD(ADLPfPointer      , pointerWarp     ) \
   ADL_FIELD(ADLPfWindowSetBool, pointerVisible  ) \
-  ADL_FIELD(ADLPfPointerCursor, pointerSetCursor)
+  ADL_FIELD(ADLPfPointerCursor, pointerSetCursor) \
+  \
+  ADL_EGL_FIELD(ADLPfEGLGetDisplay         , eglGetDisplay         ) \
+  ADL_EGL_FIELD(ADLPfEGLCreateWindowSurface, eglCreateWindowSurface)
 
-#define ADL_FIELD(type, name) \
-  type name;
+#define ADL_FIELD(type, name) type name;
+
+#if defined(ADL_HAS_EGL)
+  #define ADL_EGL_FIELD(type, name) ADL_FIELD(type, name)
+#else
+  #define ADL_EGL_FIELD(type, name)
+#endif
 
 struct ADLPlatform
 {

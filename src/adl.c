@@ -343,3 +343,21 @@ ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
 
   return adl.platform->pointerSetCursor(window, source, mask, x, y);
 }
+
+#if defined(ADL_HAS_EGL)
+ADL_STATUS adlEGLGetDisplay(EGLDisplay ** display)
+{
+  ADL_INITCHECK;
+  return adl.platform->eglGetDisplay(display);
+}
+
+ADL_STATUS adlEGLCreateWindowSurface(EGLDisplay * display, EGLint * config,
+  ADLWindow * window, EGLint * attribs, EGLSurface ** surface)
+{
+  ADL_INITCHECK;
+  ADL_NOT_NULL_CHECK(window);
+
+  return adl.platform->eglCreateWindowSurface(
+    display, config, window, attribs, surface);
+}
+#endif

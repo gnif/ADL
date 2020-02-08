@@ -214,28 +214,43 @@ static ADL_STATUS getParentWindowOffset(xcb_window_t window, WindowData * data)
 static ADL_STATUS xcbTest()
 {
   ADL_STATUS status = ADL_ERR_UNSUPPORTED;
-  /* try and connect to the display */
-  this.xcb = xcb_connect(NULL, NULL);
-  if (xcb_connection_has_error(this.xcb) == 0)
-  {
-    xcb_disconnect(this.xcb);
-    status = ADL_OK;
-  }
 
-    this.xcb = NULL;
-    return status;
+  /* try and connect to the display */
+  this.display = XOpenDisplay(NULL);
+  if (!this.display)
+    goto out_no_x;
+
+  this.xcb = XGetXCBConnection(this.display);
+  if (xcb_connection_has_error(this.xcb) == 0)
+    status = ADL_OK;
+  else
+    xcb_disconnect(this.xcb);
+
+  XCloseDisplay(this.display);
+out_no_x:
+  this.xcb = NULL;
+  return status;
 }
 
 static ADL_STATUS xcbInitialize()
 {
   ADL_STATUS status = ADL_OK;
   int err;
-  this.xcb = xcb_connect(NULL, NULL);
+
+  this.display = XOpenDisplay(NULL);
+  if (!this.display)
+  {
+    status = ADL_ERR_PLATFORM;
+    DEBUG_ERROR(status, "XCB failed to connect to the X server");
+    goto err_out;
+  }
+
+  this.xcb = XGetXCBConnection(this.display);
   if ((err = xcb_connection_has_error(this.xcb)) != 0)
   {
     status = ADL_ERR_PLATFORM;
-    DEBUG_ERROR(status, "XCB connection failed with: %s", xcbErrString(err));
-    goto err_out;
+    DEBUG_ERROR(status, "XCB get connection failed with: %s", xcbErrString(err));
+    goto err_x;
   }
 
   this.screen = xcb_setup_roots_iterator(xcb_get_setup(this.xcb)).data;
@@ -398,6 +413,9 @@ err_free_cursor_pixmap:
 err_disconnect:
   xcb_disconnect(this.xcb);
   this.xcb = NULL;
+err_x:
+  XCloseDisplay(this.display);
+  this.display = NULL;
 err_out:
   return status;
 }
@@ -986,6 +1004,30 @@ static ADL_STATUS xcbPointerSetCursor(ADLWindow * window, ADLImage * source,
   return ADL_OK;
 }
 
+#if defined(ADL_HAS_EGL)
+static ADL_STATUS xcbEGLGetDisplay(EGLDisplay ** display)
+{
+  *display = eglGetDisplay(this.display);
+  if (*display == EGL_NO_DISPLAY)
+  {
+    *display = NULL;
+    return ADL_ERR_PLATFORM;
+  }
+
+  return ADL_OK;
+}
+
+static ADL_STATUS xcbEGLCreateWindowSurface(EGLDisplay * display,
+  EGLint * config, ADLWindow * window, EGLint * attribs, EGLSurface ** surface)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+  *surface = eglCreateWindowSurface(display, config, data->window, attribs);
+  if (!*surface)
+    return ADL_ERR_PLATFORM;
+  return ADL_OK;
+}
+#endif
+
 static struct ADLPlatform xcb =
 {
   .name               = "XCB",
@@ -1014,7 +1056,12 @@ static struct ADLPlatform xcb =
 
   .pointerWarp        = xcbPointerWarp,
   .pointerVisible     = xcbPointerVisible,
-  .pointerSetCursor   = xcbPointerSetCursor
+  .pointerSetCursor   = xcbPointerSetCursor,
+
+#if defined(ADL_HAS_EGL)
+  .eglGetDisplay          = xcbEGLGetDisplay,
+  .eglCreateWindowSurface = xcbEGLCreateWindowSurface
+#endif
 };
 
 adl_platform(xcb);
