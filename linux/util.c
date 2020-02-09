@@ -38,5 +38,25 @@ uint64_t adlGetClockNS(void)
 {
   struct timespec time;
   assert(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
-  return (uint64_t)time.tv_sec * 10000LL + time.tv_nsec;
+  return (uint64_t)time.tv_sec * 1000000000LL + time.tv_nsec;
+}
+
+void adlWaitUntilMS(uint64_t clockMS)
+{
+  const struct timespec time =
+  {
+    .tv_sec  = clockMS / 1000LL,
+    .tv_nsec = (clockMS % 1000LL) * 1000LL
+  };
+  while(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &time, NULL) != 0) {}
+}
+
+void adlWaitUntilNS(uint64_t clockNS)
+{
+  const struct timespec time =
+  {
+    .tv_sec  = clockNS / 1000000000LL,
+    .tv_nsec = clockNS % 1000000000LL
+  };
+  while(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &time, NULL) != 0) {}
 }

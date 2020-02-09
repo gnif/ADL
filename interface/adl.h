@@ -62,7 +62,8 @@ typedef ADL_STATUS (*ADLPfPointerCursor)(ADLWindow * window, ADLImage * source,
 /* egl functions */
 typedef ADL_STATUS (*ADLPfEGLGetDisplay)(EGLDisplay ** display);
 typedef ADL_STATUS (*ADLPfEGLCreateWindowSurface)(EGLDisplay * display,
-  EGLint * config, ADLWindow * window, EGLint * attribs, EGLSurface ** surface);
+  EGLint * config, ADLWindow * window, const EGLint * attribs,
+  EGLSurface * surface);
 #endif
 
 #define ADL_PLATFORM_FIELDS \

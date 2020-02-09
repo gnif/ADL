@@ -52,7 +52,7 @@ ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
 #if defined(ADL_HAS_EGL)
 ADL_STATUS adlEGLGetDisplay(EGLDisplay ** display);
 ADL_STATUS adlEGLCreateWindowSurface(EGLDisplay * display, EGLint * config,
-  ADLWindow * window, EGLint * attribs, EGLSurface ** surface);
+  ADLWindow * window, const EGLint * attribs, EGLSurface * surface);
 #endif
 
 #endif

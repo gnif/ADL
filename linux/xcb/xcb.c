@@ -1031,7 +1031,8 @@ static ADL_STATUS xcbEGLGetDisplay(EGLDisplay ** display)
 }
 
 static ADL_STATUS xcbEGLCreateWindowSurface(EGLDisplay * display,
-  EGLint * config, ADLWindow * window, EGLint * attribs, EGLSurface ** surface)
+  EGLint * config, ADLWindow * window, const EGLint * attribs,
+  EGLSurface * surface)
 {
   WindowData * data = ADL_GET_WINDOW_DATA(window);
   *surface = eglCreateWindowSurface(display, config, data->window, attribs);

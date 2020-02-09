@@ -27,6 +27,9 @@
 #include <stdint.h>
 
 uint64_t adlGetClockMS(void);
-uint64_t adlGetClockUS(void);
+uint64_t adlGetClockNS(void);
+
+void adlWaitUntilMS(uint64_t clockMS);
+void adlWaitUntilNS(uint64_t clockNS);
 
 #endif

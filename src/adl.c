@@ -352,7 +352,7 @@ ADL_STATUS adlEGLGetDisplay(EGLDisplay ** display)
 }
 
 ADL_STATUS adlEGLCreateWindowSurface(EGLDisplay * display, EGLint * config,
-  ADLWindow * window, EGLint * attribs, EGLSurface ** surface)
+  ADLWindow * window, const EGLint * attribs, EGLSurface * surface)
 {
   ADL_INITCHECK;
   ADL_NOT_NULL_CHECK(window);
