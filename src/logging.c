@@ -29,7 +29,7 @@
 #include <stdarg.h>
 #include <inttypes.h>
 
-#define ADL_LOG_FORMAT "%" PRId64 " | %20s:%-4u | %-30s | "
+#define ADL_LOG_FORMAT "%16" PRId64 " | %20s:%-4u | %-30s | "
 
 static void adlLogStdout(
   ADL_LOG_LEVEL loglevel,

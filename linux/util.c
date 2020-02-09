@@ -22,6 +22,7 @@
   SOFTWARE.
 */
 
+#include "adl.h"
 #include "adl/util.h"
 
 #include <assert.h>
@@ -31,32 +32,36 @@ uint64_t adlGetClockMS(void)
 {
   struct timespec time;
   assert(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
-  return (uint64_t)time.tv_sec * 1000LL + time.tv_nsec / 1000000LL;
+  return ((uint64_t)time.tv_sec * 1000LLU + time.tv_nsec / 1000000LLU) -
+    adl.startTime;
 }
 
 uint64_t adlGetClockNS(void)
 {
   struct timespec time;
   assert(clock_gettime(CLOCK_MONOTONIC, &time) == 0);
-  return (uint64_t)time.tv_sec * 1000000000LL + time.tv_nsec;
+  return ((uint64_t)time.tv_sec * 1000000000LLU + time.tv_nsec) -
+    adl.startTime * 1000000LLU;
 }
 
 void adlWaitUntilMS(uint64_t clockMS)
 {
+  clockMS += adl.startTime;
   const struct timespec time =
   {
-    .tv_sec  = clockMS / 1000LL,
-    .tv_nsec = (clockMS % 1000LL) * 1000LL
+    .tv_sec  = clockMS / 1000LLU,
+    .tv_nsec = (clockMS % 1000LLU) * 1000LLU
   };
   while(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &time, NULL) != 0) {}
 }
 
 void adlWaitUntilNS(uint64_t clockNS)
 {
+  clockNS += adl.startTime * 1000000LLU;
   const struct timespec time =
   {
-    .tv_sec  = clockNS / 1000000000LL,
-    .tv_nsec = clockNS % 1000000000LL
+    .tv_sec  = clockNS / 1000000000LLU,
+    .tv_nsec = clockNS % 1000000000LLU
   };
   while(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &time, NULL) != 0) {}
 }

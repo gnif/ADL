@@ -36,6 +36,7 @@
 struct ADL
 {
   bool initDone;
+  uint64_t startTime;
 
   const struct ADLPlatform ** platformList;
   int                         platformListCount;

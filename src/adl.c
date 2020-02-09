@@ -58,6 +58,8 @@ ADL_STATUS adlInitialize()
     return ADL_ERR_ALREADY_INITIALIZED;
   }
 
+  adl.startTime = adlGetClockMS();
+
   /* build an array of the platform members for validation */
   struct CheckField {
     const char * name;
