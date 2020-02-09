@@ -299,9 +299,6 @@ int main(int argc, char * argv[])
   {
     switch(event.type)
     {
-      case ADL_EVENT_NONE:
-        break;
-
       case ADL_EVENT_CLOSE:
         printf("close event\n");
         goto exit;
@@ -312,7 +309,6 @@ int main(int argc, char * argv[])
         break;
 
       default:
-        printf("event: %d\n", event.type);
         break;
     }
   }
