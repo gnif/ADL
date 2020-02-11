@@ -660,7 +660,8 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
     xevent = xcb_wait_for_event(this.xcb);
   else
   {
-    if (timeout > 0)
+    xevent = xcb_poll_for_queued_event(this.xcb);
+    if (!xevent && timeout > 0)
     {
       fd_set fds;
       FD_ZERO(&fds);
@@ -670,15 +671,17 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         .tv_sec  = timeout / 1000,
         .tv_usec = (timeout % 1000) * 1000
       };
+
       if (select(this.fd + 1, &fds, NULL, NULL, &tv) == 0)
         return ADL_OK;
+
+      xevent = xcb_poll_for_event(this.xcb);
+      if (!xevent)
+        return ADL_OK;
     }
-
-    xevent = xcb_poll_for_event(this.xcb);
+    else
+      return ADL_OK;
   }
-
-  if (!xevent)
-    return ADL_OK;
 
   ADL_STATUS status;
   const bool generated = (xevent->response_type & 0x80) == 0x80;
