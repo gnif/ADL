@@ -676,12 +676,12 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         return ADL_OK;
 
       xevent = xcb_poll_for_event(this.xcb);
-      if (!xevent)
-        return ADL_OK;
     }
-    else
-      return ADL_OK;
   }
+
+  if (!xevent)
+    return ADL_OK;
+
 
   ADL_STATUS status;
   const bool generated = (xevent->response_type & 0x80) == 0x80;
