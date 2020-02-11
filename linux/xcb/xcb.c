@@ -26,7 +26,6 @@
 #include "src/window.h"
 #include "interface/adl.h"
 
-#include "logging.h"
 #include "atoms.h"
 #include "image.h"
 
@@ -177,7 +176,7 @@ static ADL_STATUS getParentWindowOffset(xcb_window_t window, WindowData * data)
 
     if (error)
     {
-      DEBUG_ERROR(ADL_ERR_PLATFORM,
+      ADL_ERROR(ADL_ERR_PLATFORM,
         "xcb_query_tree failed: code=%d, res=%d",
         error->error_code, error->resource_id);
       free(error);
@@ -197,7 +196,7 @@ static ADL_STATUS getParentWindowOffset(xcb_window_t window, WindowData * data)
 
   if (error)
   {
-    DEBUG_ERROR(ADL_ERR_PLATFORM,
+    ADL_ERROR(ADL_ERR_PLATFORM,
       "xcb_translate_coordinates failed: code=%d, res=%d",
       error->error_code, error->resource_id);
     free(error);
@@ -241,7 +240,7 @@ static ADL_STATUS xcbInitialize()
   if (!this.display)
   {
     status = ADL_ERR_PLATFORM;
-    DEBUG_ERROR(status, "XCB failed to connect to the X server");
+    ADL_ERROR(status, "XCB failed to connect to the X server");
     goto err_out;
   }
 
@@ -249,7 +248,7 @@ static ADL_STATUS xcbInitialize()
   if ((err = xcb_connection_has_error(this.xcb)) != 0)
   {
     status = ADL_ERR_PLATFORM;
-    DEBUG_ERROR(status, "XCB get connection failed with: %s", xcbErrString(err));
+    ADL_ERROR(status, "XCB get connection failed with: %s", xcbErrString(err));
     goto err_x;
   }
 
@@ -269,7 +268,7 @@ static ADL_STATUS xcbInitialize()
 
     if (error)
     {
-      DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_intern_atom failed: code=%d, res=%d",
+      ADL_ERROR(ADL_ERR_PLATFORM, "xcb_intern_atom failed: code=%d, res=%d",
         error->error_code, error->resource_id);
       free(error);
       status = ADL_ERR_PLATFORM;
@@ -291,7 +290,7 @@ static ADL_STATUS xcbInitialize()
 
     if (!r)
     {
-      DEBUG_INFO(ADL_ERR_PLATFORM, "xcb_xkb_use_extension failed");
+      ADL_INFO(ADL_ERR_PLATFORM, "xcb_xkb_use_extension failed");
       status = ADL_ERR_PLATFORM;
       goto err_disconnect;
     }
@@ -316,7 +315,7 @@ static ADL_STATUS xcbInitialize()
 
     if (!r)
     {
-      DEBUG_INFO(ADL_ERR_PLATFORM, "xcb_xkb_get_names");
+      ADL_INFO(ADL_ERR_PLATFORM, "xcb_xkb_get_names");
       status = ADL_ERR_PLATFORM;
       goto err_disconnect;
     }
@@ -371,7 +370,7 @@ static ADL_STATUS xcbInitialize()
 
     if ((error = xcb_request_check(this.xcb, c)))
     {
-      DEBUG_INFO(ADL_ERR_PLATFORM, "failed to create the blank pixmap");
+      ADL_INFO(ADL_ERR_PLATFORM, "failed to create the blank pixmap");
       status = ADL_ERR_PLATFORM;
       free(error);
       goto err_disconnect;
@@ -386,7 +385,7 @@ static ADL_STATUS xcbInitialize()
 
     if ((error = xcb_request_check(this.xcb, c)))
     {
-      DEBUG_INFO(ADL_ERR_PLATFORM, "failed to create the blank pointer");
+      ADL_INFO(ADL_ERR_PLATFORM, "failed to create the blank pointer");
       status = ADL_ERR_PLATFORM;
       free(error);
       goto err_free_cursor_pixmap;
@@ -396,7 +395,7 @@ static ADL_STATUS xcbInitialize()
   /* load the default pointer for when we need to restore it */
   if (xcb_cursor_context_new(this.xcb, this.screen, &this.cursorContext) < 0)
   {
-    DEBUG_INFO(ADL_ERR_PLATFORM, "failed to initialize xcb-cursor");
+    ADL_INFO(ADL_ERR_PLATFORM, "failed to initialize xcb-cursor");
     status = ADL_ERR_PLATFORM;
     goto err_free_cursor;
   }
@@ -477,7 +476,7 @@ static ADL_STATUS xcbWindowCreate(const ADLWindowDef def, ADLWindow * result)
   xcb_generic_error_t *error;
   if ((error = xcb_request_check(this.xcb, c)))
   {
-    DEBUG_ERROR(ADL_ERR_PLATFORM, "xcb_create_window failed: code=%d, res=%d",
+    ADL_ERROR(ADL_ERR_PLATFORM, "xcb_create_window failed: code=%d, res=%d",
       error->error_code, error->resource_id);
     free(error);
     return ADL_ERR_PLATFORM;
@@ -609,7 +608,7 @@ static ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
     {
       if (reply->status != XCB_GRAB_STATUS_SUCCESS)
       {
-        DEBUG_ERROR(ADL_ERR_PLATFORM, "failed to grab the pointer");
+        ADL_ERROR(ADL_ERR_PLATFORM, "failed to grab the pointer");
         free(reply);
         return ADL_ERR_PLATFORM;
       }
@@ -624,7 +623,7 @@ static ADL_STATUS xcbWindowSetGrab(ADLWindow * window, bool enable)
     xcb_generic_error_t *error;
     if ((error = xcb_request_check(this.xcb, c)))
     {
-      DEBUG_ERROR(ADL_ERR_PLATFORM, "failed to un-grab the pointer");
+      ADL_ERROR(ADL_ERR_PLATFORM, "failed to un-grab the pointer");
       free(error);
       return ADL_ERR_PLATFORM;
     }

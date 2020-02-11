@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
+#include "adl.h"
 #include "linkedlist.h"
-#include "logging.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -33,13 +33,13 @@ ADL_STATUS adlLinkedListNew(const size_t itemSize, ADLLinkedListItemDtor dtor,
 {
   if (!list)
   {
-    DEBUG_BUG(ADL_ERR_INVALID_ARGUMENT, "list == NULL");
+    ADL_BUG(ADL_ERR_INVALID_ARGUMENT, "list == NULL");
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
   if (itemSize < sizeof(ADLLinkedListItem))
   {
-    DEBUG_BUG(ADL_ERR_INVALID_ARGUMENT, "itemSize < sizeof(ADLLinkedListItem)");
+    ADL_BUG(ADL_ERR_INVALID_ARGUMENT, "itemSize < sizeof(ADLLinkedListItem)");
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
@@ -59,7 +59,7 @@ ADL_STATUS adlLinkedListFree(ADLLinkedList * list)
 {
   if (!list)
   {
-    DEBUG_BUG(ADL_ERR_INVALID_ARGUMENT, "list == NULL");
+    ADL_BUG(ADL_ERR_INVALID_ARGUMENT, "list == NULL");
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
@@ -89,7 +89,7 @@ ADL_STATUS adlLinkedListNewItem(ADLLinkedList * list,
   ADLLinkedListItem * item = calloc(1, list->size);
   if (!item)
   {
-    DEBUG_ERROR(ADL_ERR_NO_MEM, "unable to allocate %lu bytes", list->size);
+    ADL_ERROR(ADL_ERR_NO_MEM, "unable to allocate %lu bytes", list->size);
     return ADL_ERR_NO_MEM;
   }
 

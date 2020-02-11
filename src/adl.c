@@ -24,7 +24,6 @@
 
 #include "adl.h"
 #include "window.h"
-#include "logging.h"
 #include "linkedlist.h"
 
 #include "interface/adl.h"
@@ -54,7 +53,7 @@ ADL_STATUS adlInitialize()
 
   if (adl.initDone)
   {
-    DEBUG_ERROR(ADL_ERR_ALREADY_INITIALIZED, "already initialized");
+    ADL_ERROR(ADL_ERR_ALREADY_INITIALIZED, "already initialized");
     return ADL_ERR_ALREADY_INITIALIZED;
   }
 
@@ -90,14 +89,14 @@ ADL_STATUS adlInitialize()
       const void ** check = (const void **)((const uint8_t*)p + f->offset);
       if (!*check)
       {
-        DEBUG_BUG(ADL_ERR_PLATFORM, "%s: `%s` is NULL", p->name, f->name);
+        ADL_BUG(ADL_ERR_PLATFORM, "%s: `%s` is NULL", p->name, f->name);
         error = true;
       }
     }
 
     if (error)
     {
-      DEBUG_BUG(ADL_ERR_PLATFORM,
+      ADL_BUG(ADL_ERR_PLATFORM,
           "%s: Implemention is incomplete and has been disabled", p->name);
       adl.platformList[i] = NULL;
       continue;
@@ -117,20 +116,20 @@ ADL_STATUS adlInitialize()
     }
 
     /* treat everything else as a warning */
-    DEBUG_WARN(status,
+    ADL_WARN(status,
         "Platform `%s` failed with the error: %s",
         p->name,
         adlStatusString(status));
     adl.platformList[i] = NULL;
   }
 
-  DEBUG_INFO(status,
+  ADL_INFO(status,
       "%d platform(s) available", adl.numPlatforms);
 
   if (adl.numPlatforms == 0)
   {
     status = ADL_ERR_UNSUPPORTED;
-    DEBUG_ERROR(status,
+    ADL_ERROR(status,
       "Unable to start, no supported platforms found");
   }
 
@@ -184,7 +183,7 @@ ADL_STATUS adlUsePlatform(const char * name)
 
   if (!adl.platform)
   {
-    DEBUG_ERROR(ADL_ERR_INVALID_PLATFORM, "The platform `%s` is unknown", name);
+    ADL_ERROR(ADL_ERR_INVALID_PLATFORM, "The platform `%s` is unknown", name);
     return ADL_ERR_INVALID_PLATFORM;
   }
 
@@ -196,11 +195,11 @@ ADL_STATUS adlUsePlatform(const char * name)
 
   if ((status = adl.platform->init()) != ADL_OK)
   {
-    DEBUG_ERROR(status, "Platform `%s` initialization failed", name);
+    ADL_ERROR(status, "Platform `%s` initialization failed", name);
     return status;
   }
 
-  DEBUG_INFO(ADL_OK, "Using platform: %s", name);
+  ADL_INFO(ADL_OK, "Using platform: %s", name);
   return ADL_OK;
 }
 

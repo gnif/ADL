@@ -34,7 +34,7 @@ void imageListItemDestructor(ADLLinkedListItem  * item)
 
   ADL_STATUS status;
   if ((status = adl.platform->imageDestroy(&ii->image)) != ADL_OK)
-    DEBUG_ERROR(status, "imageDestroy failed");
+    ADL_ERROR(status, "imageDestroy failed");
 
   free(ii);
 }
@@ -83,7 +83,7 @@ ADL_STATUS adlImageCreate(ADLWindow * window, const ADLImageDef def,
   status = adl.platform->imageCreate(window, def, img);
   if (status == ADL_OK && !item->id)
   {
-    DEBUG_BUG(ADL_ERR_PLATFORM,
+    ADL_BUG(ADL_ERR_PLATFORM,
         "%s->imageCreate did not set the image id", adl.platform->name);
     adlLinkedListPop(&adl.windowList, NULL);
     return ADL_ERR_PLATFORM;

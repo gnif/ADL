@@ -25,6 +25,7 @@
 #ifndef _H_ADL
 #define _H_ADL
 
+#include "logging.h"
 #include "status.h"
 #include "window.h"
 #include "event.h"

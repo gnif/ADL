@@ -25,10 +25,9 @@
 #ifndef _H_SRC_ADL
 #define _H_SRC_ADL
 
-#include "adl/window.h"
+#include "window.h"
 #include "interface/adl.h"
 #include "linkedlist.h"
-#include "logging.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -52,14 +51,14 @@ extern struct ADL adl;
 #define ADL_INITCHECK \
   if (!adl.initDone) \
   { \
-    DEBUG_ERROR(ADL_ERR_NOT_INITIALIZED, "not initialized"); \
+    ADL_ERROR(ADL_ERR_NOT_INITIALIZED, "not initialized"); \
     return ADL_ERR_NOT_INITIALIZED; \
   }
 
 #define ADL_NOT_NULL_CHECK(x) \
   if (!x) \
   { \
-    DEBUG_ERROR(ADL_ERR_INVALID_ARGUMENT, #x " == NULL"); \
+    ADL_ERROR(ADL_ERR_INVALID_ARGUMENT, #x " == NULL"); \
     return ADL_ERR_INVALID_ARGUMENT; \
   }
 

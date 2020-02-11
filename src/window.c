@@ -25,7 +25,6 @@
 #include "window.h"
 #include "src/window.h"
 #include "src/adl.h"
-#include "src/logging.h"
 #include "src/image.h"
 
 #include <stdlib.h>
@@ -38,7 +37,7 @@ void windowListItemDestructor(ADLLinkedListItem * item)
 
   ADL_STATUS status;
   if ((status = adl.platform->windowDestroy(&wi->window)) != ADL_OK)
-    DEBUG_ERROR(status, "windowDestroy failed");
+    ADL_ERROR(status, "windowDestroy failed");
 
   free(wi);
 }
@@ -62,7 +61,7 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
 
   if (!result)
   {
-    DEBUG_ERROR(ADL_ERR_INVALID_ARGUMENT, "result == NULL");
+    ADL_ERROR(ADL_ERR_INVALID_ARGUMENT, "result == NULL");
     return ADL_ERR_INVALID_ARGUMENT;
   }
 
@@ -92,7 +91,7 @@ ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result)
   status = adl.platform->windowCreate(def, win);
   if (status == ADL_OK && (!ADL_GET_WINDOW_DATA(win)))
   {
-    DEBUG_BUG(ADL_ERR_PLATFORM,
+    ADL_BUG(ADL_ERR_PLATFORM,
         "%s->windowCreate did not set the window data", adl.platform->name);
 
     adlLinkedListPop(&adl.windowList, NULL);

@@ -45,7 +45,7 @@ ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
     xcb_generic_error_t *error;
     if ((error = xcb_request_check(this.xcb, c)))
     {
-      DEBUG_ERROR(ADL_ERR_PLATFORM, "dri3_pixmap_from_buffer failure: code %d",
+      ADL_ERROR(ADL_ERR_PLATFORM, "dri3_pixmap_from_buffer failure: code %d",
         error->error_code);
       free(error);
       return ADL_ERR_PLATFORM;
