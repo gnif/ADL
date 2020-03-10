@@ -37,7 +37,7 @@ static void timerHandler(int sig, siginfo_t * si, void * uc)
     timer_delete(timer->timerID);
 }
 
-ADL_STATUS adlTimerCreate(const unsigned int intervalMS, ADLTimerFn fn,
+ADL_STATUS adlTimerCreate(const unsigned int intervalNS, ADLTimerFn fn,
     void * udata, ADLTimer * result)
 {
   struct sigaction sa =
@@ -63,10 +63,10 @@ ADL_STATUS adlTimerCreate(const unsigned int intervalMS, ADLTimerFn fn,
 
   struct itimerspec its =
   {
-    .it_interval.tv_sec  = intervalMS / 1000U,
-    .it_interval.tv_nsec = intervalMS % 1000000U,
-    .it_value.tv_sec     = intervalMS / 1000U,
-    .it_value.tv_nsec    = intervalMS % 100000U
+    .it_interval.tv_sec  = intervalNS / 1000000000U,
+    .it_interval.tv_nsec = intervalNS - (intervalNS / 1000000000U * 1000000000U),
+    .it_value.tv_sec     = intervalNS / 1000000000U,
+    .it_value.tv_nsec    = intervalNS - (intervalNS / 1000000000U * 1000000000U)
   };
   timer_settime(result->timerID, 0, &its, NULL);
 

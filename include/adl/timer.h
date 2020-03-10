@@ -31,7 +31,7 @@
 
 typedef bool (*ADLTimerFn)(void * udata);
 
-ADL_STATUS adlTimerCreate(const unsigned int interval, ADLTimerFn fn,
+ADL_STATUS adlTimerCreate(const unsigned int intervalNS, ADLTimerFn fn,
     void * udata, ADLTimer * result);
 
 void adlTimerDestroy(ADLTimer * timer);
