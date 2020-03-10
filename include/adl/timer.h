@@ -29,6 +29,12 @@
 #include "window.h"
 #include "platform.h"
 
+/**
+ * The callback from the timer
+ *
+ * @Note: Under linux this is called via a system signal and usage of `adl`
+ * methods from inside this callback should be avoided to prevent deadlocks.
+ */
 typedef bool (*ADLTimerFn)(void * udata);
 
 ADL_STATUS adlTimerCreate(const unsigned int intervalNS, ADLTimerFn fn,
