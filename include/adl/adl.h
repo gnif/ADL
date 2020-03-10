@@ -32,6 +32,7 @@
 #include "image.h"
 #include "util.h"
 #include "thread.h"
+#include "timer.h"
 
 #if defined(ADL_HAS_EGL)
 #include <EGL/egl.h>

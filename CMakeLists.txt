@@ -14,6 +14,7 @@ if(UNIX)
   set(PUBLIC_DEFS -D ADL_PLATFORM_LINUX)
   set(PRIVATE_DEFS -D_GNU_SOURCE)
   link_libraries(pthread)
+  link_libraries(rt)
 elseif(WIN32)
   set(PLATFORM "win32")
   set(PUBLIC_DEFS -D ADL_PLATFORM_WIN32)
@@ -29,6 +30,7 @@ set(SOURCES
   src/linkedlist.c
   ${PLATFORM}/util.c
   ${PLATFORM}/thread.c
+  ${PLATFORM}/timer.c
 )
 
 find_package(OpenGL COMPONENTS EGL)

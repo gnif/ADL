@@ -22,14 +22,18 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_PLATFORM_LINUX
-#define _H_ADL_PLATFORM_LINUX
+#ifndef _H_ADL_TIMER
+#define _H_ADL_TIMER
 
-#ifndef _H_ADL_PLATFORM
-#error "do not use this header directly"
-#endif
+#include "adl.h"
+#include "window.h"
+#include "platform.h"
 
-#include "linux/thread.h"
-#include "linux/timer.h"
+typedef bool (*ADLTimerFn)(void * udata);
+
+ADL_STATUS adlTimerCreate(const unsigned int interval, ADLTimerFn fn,
+    void * udata, ADLTimer * result);
+
+void adlTimerDestroy(ADLTimer * timer);
 
 #endif

@@ -22,14 +22,21 @@
   SOFTWARE.
 */
 
-#ifndef _H_ADL_PLATFORM_LINUX
-#define _H_ADL_PLATFORM_LINUX
+#ifndef _H_ADL_LINUX_TIMER
+#define _H_ADL_LINUX_TIMER
 
 #ifndef _H_ADL_PLATFORM
-#error "do not use this header directly"
+#error "do not include this header directly"
 #endif
 
-#include "linux/thread.h"
-#include "linux/timer.h"
+#include <time.h>
+
+typedef struct _ADLTimer
+{
+  void *  timerFn;
+  void *  udata;
+  timer_t timerID;
+}
+ADLTimer;
 
 #endif
