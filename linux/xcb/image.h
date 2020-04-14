@@ -28,10 +28,14 @@
 #include "adl/status.h"
 #include "adl/image.h"
 
+#include <xcb/render.h>
+
 typedef struct
 {
   ADLWindow *  window;
   ADLImageDef  def;
+
+  xcb_render_pictforminfo_t * format;
 
   xcb_pixmap_t pixmap;
   unsigned int serial;

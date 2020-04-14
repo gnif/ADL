@@ -416,6 +416,97 @@ static ADL_STATUS xcbInitialize()
 
   this.defaultPointer = xcb_cursor_load_cursor(this.cursorContext, "left_ptr");
 
+  /* lookup the render formats for later use */
+  {
+    xcb_render_query_pict_formats_cookie_t c =
+      xcb_render_query_pict_formats(this.xcb);
+
+    xcb_render_query_pict_formats_reply_t * r =
+      xcb_render_query_pict_formats_reply(this.xcb, c, 0);
+
+    xcb_render_pictforminfo_t * format =
+      xcb_render_query_pict_formats_formats(r);
+
+    for(int i = 0; i < r->num_formats; ++i, ++format)
+    {
+      if (format->type != XCB_RENDER_PICT_TYPE_DIRECT)
+        continue;
+
+      // must contain the red channel
+      if (format->direct.red_mask != 0xff)
+        continue;
+
+      switch(format->direct.red_shift)
+      {
+        //RGBA, ARGB
+#ifdef ENDIAN_LITTLE
+        case 0:
+        case 8:
+#else
+        case 16:
+        case 24:
+#endif
+        {
+          if (format->depth == 24)
+          {
+            this.formatRGB = *format;
+            break;
+          }
+
+          // if has the alpha channel
+          if (format->depth == 32 && format->direct.alpha_mask == 0xff)
+          {
+            switch(format->direct.alpha_shift)
+            {
+#ifdef ENDIAN_LITTLE
+              case 24: this.formatRGBA = *format; break;
+              case 0 : this.formatARGB = *format; break;
+#else
+              case 0 : this.formatRGBA = *format; break;
+              case 24: this.formatARGB = *format; break;
+#endif
+            }
+          }
+        }
+        break;
+
+        //BGRA, ABGR
+#ifdef ENDIAN_LITTLE
+        case 16:
+        case 24:
+#else
+        case 0:
+        case 8:
+#endif
+        {
+          if (format->depth == 24)
+          {
+            this.formatBGR = *format;
+            break;
+          }
+
+          // if has the alpha channel
+          if (format->depth == 32 && format->direct.alpha_mask == 0xff)
+          {
+            switch(format->direct.alpha_shift)
+            {
+#ifdef ENDIAN_LITTLE
+              case 24: this.formatBGRA = *format; break;
+              case 0 : this.formatABGR = *format; break;
+#else
+              case 0 : this.formatBGRA = *format; break;
+              case 24: this.formatABGR = *format; break;
+#endif
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    free(r);
+  }
+
   this.fd = xcb_get_file_descriptor(this.xcb);
 
   /* install the signal handler so we can catch SIGINT/SIGTERM */
@@ -1050,18 +1141,29 @@ static ADL_STATUS xcbPointerSetCursor(ADLWindow * window, ADLImage * source,
     ADLImage * mask, int x, int y)
 {
   WindowData * wData = ADL_GET_WINDOW_DATA(window);
-  ImageData *  sData = ADL_GET_IMAGE_DATA(source );
-  ImageData *  mData = ADL_GET_IMAGE_DATA(mask   );
+  ImageData *  sData = ADL_GET_IMAGE_DATA(source);
+  xcb_cursor_t cid   = xcb_generate_id(this.xcb);
 
-  xcb_cursor_t cid = xcb_generate_id(this.xcb);
-  xcb_create_cursor(
-    this.xcb,
-    cid,
-    sData->pixmap,
-    mData->pixmap,
-    0, 0, 0,
-    0, 0, 0,
-    x, y);
+  if (mask)
+  {
+    ImageData * mData = ADL_GET_IMAGE_DATA(mask);
+    xcb_create_cursor(
+      this.xcb,
+      cid,
+      sData->pixmap,
+      mData->pixmap,
+      0, 0, 0,
+      0, 0, 0,
+      x, y);
+  }
+  else
+  {
+    xcb_render_picture_t pic = xcb_generate_id(this.xcb);
+    xcb_render_create_picture(this.xcb, pic, sData->pixmap, sData->format->id,
+        0, 0);
+    xcb_render_create_cursor(this.xcb, cid, pic, x, y);
+    xcb_render_free_picture(this.xcb, pic);
+  }
 
   if (wData->currentPointer != this.defaultPointer)
     xcb_free_cursor(this.xcb, wData->currentPointer);

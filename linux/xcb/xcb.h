@@ -33,6 +33,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xkb.h>
 #include <xcb/xcb_cursor.h>
+#include <xcb/render.h>
 
 struct State
 {
@@ -41,6 +42,9 @@ struct State
   int                fd;
   xcb_screen_t *     screen;
   char               keyMap[256][5];
+
+  xcb_render_pictforminfo_t formatRGB, formatRGBA, formatARGB;
+  xcb_render_pictforminfo_t formatBGR, formatBGRA, formatABGR;
 
   xcb_cursor_context_t * cursorContext;
   xcb_cursor_t defaultPointer;

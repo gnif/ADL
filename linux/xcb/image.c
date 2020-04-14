@@ -27,11 +27,27 @@ ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
   idata->window = window;
   idata->def    = def;
 
-  /* for now we only support dmabuf */
-  if (def.backend != ADL_IMAGE_BACKEND_DMABUF)
-    return ADL_ERR_UNSUPPORTED_BACKEND;
+  switch(def.format)
+  {
+    case ADL_IMAGE_FORMAT_RGBA:
+      switch(def.bpp)
+      {
+        case 24: idata->format = &this.formatRGB ; break;
+        case 32: idata->format = &this.formatRGBA; break;
+      }
+      break;
 
-  idata->pixmap = xcb_generate_id(this.xcb);
+    case ADL_IMAGE_FORMAT_BGRA:
+      switch(def.bpp)
+      {
+        case 24: idata->format = &this.formatBGR;  break;
+        case 32: idata->format = &this.formatBGRA; break;
+      }
+      break;
+  }
+
+  if (!idata->format || idata->format->id == 0)
+    return ADL_ERR_UNSUPPORTED;
 
   switch(def.backend)
   {

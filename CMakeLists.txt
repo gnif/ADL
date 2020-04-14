@@ -47,6 +47,7 @@ pkg_check_modules(XCB
   xcb-present
   xcb-xkb
   xcb-cursor
+  xcb-render
 )
 
 if(XCB_FOUND)  
