@@ -35,6 +35,7 @@ typedef enum
   /* this type means there are no events to process */
   ADL_EVENT_NONE,
 
+  ADL_EVENT_QUIT,
   ADL_EVENT_CLOSE,
   ADL_EVENT_PAINT,
   ADL_EVENT_SHOW,

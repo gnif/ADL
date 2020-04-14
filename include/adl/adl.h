@@ -40,6 +40,7 @@
 
 ADL_STATUS adlInitialize();
 ADL_STATUS adlShutdown();
+ADL_STATUS adlQuit();
 
 ADL_STATUS adlGetPlatformList(int * count, const char * names[]);
 ADL_STATUS adlUsePlatform(const char * name);

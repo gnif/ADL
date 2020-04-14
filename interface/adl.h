@@ -44,6 +44,7 @@ typedef ADL_STATUS (*ADLPfProcessEvent)
 typedef ADL_STATUS (*ADLPfWindowCreate)(const ADLWindowDef def,
     ADLWindow * result);
 typedef ADL_STATUS (*ADLPfWindow)(ADLWindow * window);
+typedef ADL_STATUS (*ADLPfWindowEvent   )(ADLWindow * window, ADLEvent * event);
 typedef ADL_STATUS (*ADLPfWindowSetStr  )(ADLWindow * window, const char * str);
 typedef ADL_STATUS (*ADLPfWindowSetBool )(ADLWindow * window, bool enable     );
 
@@ -84,6 +85,7 @@ typedef ADL_STATUS (*ADLPfEGLCreateWindowSurface)(EGLDisplay * display,
   ADL_FIELD(ADLPfWindowSetBool, windowSetGrab     ) \
   ADL_FIELD(ADLPfWindowSetBool, windowSetRelative ) \
   ADL_FIELD(ADLPfWindow       , windowSetFocus    ) \
+  ADL_FIELD(ADLPfWindowEvent  , windowEvent       ) \
   \
   ADL_FIELD(size_t                , imageDataSize    ) \
   ADL_FIELD(ADLPfImageGetSupported, imageGetSupported) \

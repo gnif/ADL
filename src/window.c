@@ -27,6 +27,8 @@
 #include "src/adl.h"
 #include "src/image.h"
 
+#include "adl/event.h"
+
 #include <stdlib.h>
 
 void windowListItemDestructor(ADLLinkedListItem * item)
@@ -40,6 +42,13 @@ void windowListItemDestructor(ADLLinkedListItem * item)
     ADL_ERROR(status, "windowDestroy failed");
 
   free(wi);
+}
+
+bool windowListItemEvent(ADLLinkedListItem * item, void * udata)
+{
+  ADLWindowListItem * wi = (ADLWindowListItem *)item;
+  adl.platform->windowEvent(&wi->window, (ADLEvent *)udata);
+  return true;
 }
 
 ADLWindow * windowFindById(ADLWindowId id)

@@ -145,6 +145,18 @@ ADL_STATUS adlShutdown()
   return ADL_OK;
 }
 
+ADL_STATUS adlQuit()
+{
+  ADL_INITCHECK;
+
+  ADLEvent event = {
+    .type = ADL_EVENT_QUIT
+  };
+
+  adlLinkedListIterate(&adl.windowList, windowListItemEvent, &event);
+  return ADL_OK;
+}
+
 ADL_STATUS adlGetPlatformList(int * count, const char * names[])
 {
   ADL_INITCHECK;

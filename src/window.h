@@ -59,6 +59,7 @@ ADLWindowListItem;
   (&(ADL_WINDOW_GET_LIST_ITEM(x)->imageList))
 
 void windowListItemDestructor(ADLLinkedListItem * item);
+bool windowListItemEvent(ADLLinkedListItem * item, void * udata);
 ADLWindow * windowFindById(ADLWindowId id);
 
 #endif
