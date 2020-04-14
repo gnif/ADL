@@ -123,6 +123,10 @@ int main()
       case ADL_EVENT_NONE:
         continue;
 
+      case ADL_EVENT_QUIT:
+        printf("%s: quit event\n", src);
+        goto exit;
+
       case ADL_EVENT_CLOSE:
         printf("%s: close event\n", src);
         goto exit;
