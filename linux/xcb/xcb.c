@@ -1141,6 +1141,19 @@ static ADL_STATUS xcbPointerSetCursor(ADLWindow * window, ADLImage * source,
     ADLImage * mask, int x, int y)
 {
   WindowData * wData = ADL_GET_WINDOW_DATA(window);
+
+  if (!source)
+  {
+    if (wData->currentPointer != this.defaultPointer)
+      xcb_free_cursor(this.xcb, wData->currentPointer);
+
+    wData->currentPointer = this.defaultPointer;
+    xcb_change_window_attributes(this.xcb, wData->window, XCB_CW_CURSOR,
+        &(wData->currentPointer));
+
+    return ADL_OK;
+  }
+
   ImageData *  sData = ADL_GET_IMAGE_DATA(source);
   xcb_cursor_t cid   = xcb_generate_id(this.xcb);
 

@@ -351,7 +351,7 @@ ADL_STATUS adlPointerSetCursor(ADLWindow * window, ADLImage * source,
     ADLImage * mask, int x, int y)
 {
   ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(source);
+  ADL_NOT_NULL_CHECK(window);
 
   return adl.platform->pointerSetCursor(window, source, mask, x, y);
 }
