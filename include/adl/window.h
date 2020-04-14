@@ -94,6 +94,7 @@ struct _ADLWindow
 
   bool haveMousePos;
   int  mouseX, mouseY;
+  bool mouseWarping, mouseWarp;
 };
 
 ADL_STATUS adlWindowCreate(const ADLWindowDef def, ADLWindow ** result);

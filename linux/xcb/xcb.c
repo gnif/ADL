@@ -1027,10 +1027,11 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
         if (xevent->full_sequence >= data->warpCookie.sequence)
         {
           /* pass back the warp details for ADL to figure out */
-          event->u.mouse.warp  = true;
-          event->u.mouse.warpX = e->event_x - data->warpX;
-          event->u.mouse.warpY = e->event_y - data->warpY;
-          data->warping        = false;
+          event->u.mouse.warp    = true;
+          event->u.mouse.warpX   = e->event_x - data->warpX;
+          event->u.mouse.warpY   = e->event_y - data->warpY;
+          event->u.mouse.warping = false;
+          data->warping          = false;
         }
         else
         {
@@ -1151,6 +1152,7 @@ static ADL_STATUS xcbPointerSetCursor(ADLWindow * window, ADLImage * source,
     xcb_change_window_attributes(this.xcb, wData->window, XCB_CW_CURSOR,
         &(wData->currentPointer));
 
+    xcb_flush(this.xcb);
     return ADL_OK;
   }
 

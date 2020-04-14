@@ -289,14 +289,18 @@ ADL_STATUS adlProcessEvent(int timeout, ADLEvent * event)
 
       // if there has been no change, swallow the event
       if (event->type == ADL_EVENT_MOUSE_MOVE &&
-          event->u.mouse.relX   == 0 &&
-          event->u.mouse.relY   == 0 &&
-          event->u.mouse.x      == window->mouseX &&
-          event->u.mouse.y      == window->mouseY)
+          event->u.mouse.relX    == 0 &&
+          event->u.mouse.relY    == 0 &&
+          event->u.mouse.x       == window->mouseX &&
+          event->u.mouse.y       == window->mouseY &&
+          event->u.mouse.warping == window->mouseWarping &&
+          event->u.mouse.warp    == window->mouseWarp)
         event->type = ADL_EVENT_NONE;
 
-      window->mouseX = event->u.mouse.x;
-      window->mouseY = event->u.mouse.y;
+      window->mouseX       = event->u.mouse.x;
+      window->mouseY       = event->u.mouse.y;
+      window->mouseWarping = event->u.mouse.warping;
+      window->mouseWarp    = event->u.mouse.warp;
       break;
 
     case ADL_EVENT_WINDOW_CHANGE:
