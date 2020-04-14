@@ -37,7 +37,11 @@ typedef struct _ADLLinkedListItem
 }
 ADLLinkedListItem;
 
+// destructor
 typedef void (* ADLLinkedListItemDtor)(ADLLinkedListItem * item);
+
+// iterator
+typedef bool (* ADLLinkedListItemItor)(ADLLinkedListItem * item, void * udata);
 
 typedef struct
 {
@@ -60,5 +64,8 @@ ADL_STATUS adlLinkedListPush  (ADLLinkedList * list, ADLLinkedListItem *  data);
 ADL_STATUS adlLinkedListPop   (ADLLinkedList * list, ADLLinkedListItem ** result);
 ADL_STATUS adlLinkedListRemove(ADLLinkedList * list, ADLLinkedListItem ** item,
     bool freeItem);
+
+void adlLinkedListIterate(ADLLinkedList * list, ADLLinkedListItemItor itor,
+    void * udata);
 
 #endif

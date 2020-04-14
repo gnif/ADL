@@ -173,3 +173,17 @@ ADL_STATUS adlLinkedListRemove(ADLLinkedList * list, ADLLinkedListItem ** item,
 
   return ADL_OK;
 }
+
+void adlLinkedListIterate(ADLLinkedList * list, ADLLinkedListItemItor itor,
+    void * udata)
+{
+  assert(list);
+
+  ADLLinkedListItem * next;
+  for(ADLLinkedListItem * item = list->head; item != NULL; item = next)
+  {
+    next = item->next;
+    if (!itor(item, udata))
+      break;
+  }
+}
