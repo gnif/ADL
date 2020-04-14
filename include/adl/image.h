@@ -79,7 +79,7 @@ typedef struct
 ADLImage;
 
 /* get the backends supported by the platform */
-ADL_STATUS adlImageGetSupported(ADLImageBackend * backend);
+ADL_STATUS adlImageGetSupported(const ADLImageBackend ** backends);
 
 /* create a new image per the definition */
 ADL_STATUS adlImageCreate(ADLWindow * window, const ADLImageDef def,

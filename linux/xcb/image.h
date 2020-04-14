@@ -38,7 +38,7 @@ typedef struct
 }
 ImageData;
 
-ADL_STATUS xcbImageGetSupported(ADLImageBackend * result);
+ADL_STATUS xcbImageGetSupported(const ADLImageBackend ** result);
 ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
     ADLImage * result);
 ADL_STATUS xcbImageDestroy(ADLImage * image);

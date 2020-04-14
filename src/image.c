@@ -53,11 +53,11 @@ ADLImage * imageFindById(ADLWindow * window, ADLImageId id)
 }
 
 /* get the backends supported by the platform */
-ADL_STATUS adlImageGetSupported(ADLImageBackend * backend)
+ADL_STATUS adlImageGetSupported(const ADLImageBackend ** backends)
 {
   ADL_INITCHECK;
-  ADL_NOT_NULL_CHECK(backend);
-  return adl.platform->imageGetSupported(backend);
+  ADL_NOT_NULL_CHECK(backends);
+  return adl.platform->imageGetSupported(backends);
 }
 
 /* create a new image per the definition */

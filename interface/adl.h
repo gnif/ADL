@@ -49,7 +49,7 @@ typedef ADL_STATUS (*ADLPfWindowSetStr  )(ADLWindow * window, const char * str);
 typedef ADL_STATUS (*ADLPfWindowSetBool )(ADLWindow * window, bool enable     );
 
 /* image functions */
-typedef ADL_STATUS (*ADLPfImageGetSupported)(ADLImageBackend * result);
+typedef ADL_STATUS (*ADLPfImageGetSupported)(const ADLImageBackend ** result);
 typedef ADL_STATUS (*ADLPfImageCreate      )(ADLWindow * window,
     const ADLImageDef def, ADLImage * result);
 typedef ADL_STATUS (*ADLPfImage            )(ADLImage * result);

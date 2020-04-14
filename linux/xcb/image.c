@@ -6,9 +6,15 @@
 
 #include <stdlib.h>
 
-ADL_STATUS xcbImageGetSupported(ADLImageBackend * result)
+ADL_STATUS xcbImageGetSupported(const ADLImageBackend ** result)
 {
-  *result = ADL_IMAGE_BACKEND_DMABUF;
+  static const ADLImageBackend supported[] =
+  {
+    ADL_IMAGE_BACKEND_DMABUF,
+    ADL_IMAGE_BACKEND_BUFFER,
+    0
+  };
+  *result = supported;
   return ADL_OK;
 }
 
@@ -27,29 +33,70 @@ ADL_STATUS xcbImageCreate(ADLWindow * window, const ADLImageDef def,
 
   idata->pixmap = xcb_generate_id(this.xcb);
 
+  switch(def.backend)
   {
-    xcb_void_cookie_t c =
-      xcb_dri3_pixmap_from_buffer_checked(
+    case ADL_IMAGE_BACKEND_DMABUF:
+    {
+      idata->pixmap = xcb_generate_id(this.xcb);
+
+      xcb_void_cookie_t c =
+        xcb_dri3_pixmap_from_buffer_checked(
+          this.xcb,
+          idata->pixmap,
+          wdata->window,
+          def.h * def.pitch,
+          def.w,
+          def.h,
+          def.pitch,
+          def.bpp,
+          def.depth,
+          def.u.dmabuf.fd
+        );
+
+      xcb_generic_error_t *error;
+      if ((error = xcb_request_check(this.xcb, c)))
+      {
+        ADL_ERROR(ADL_ERR_PLATFORM, "dri3_pixmap_from_buffer failure: code %d",
+          error->error_code);
+        free(error);
+        return ADL_ERR_PLATFORM;
+      }
+      break;
+    }
+
+    case ADL_IMAGE_BACKEND_BUFFER:
+    {
+      idata->pixmap = xcb_generate_id(this.xcb);
+      xcb_create_pixmap(
         this.xcb,
+        def.depth,
         idata->pixmap,
         wdata->window,
-        def.h * def.pitch,
         def.w,
-        def.h,
-        def.pitch,
-        def.bpp,
-        def.depth,
-        def.u.dmabuf.fd
+        def.h
       );
 
-    xcb_generic_error_t *error;
-    if ((error = xcb_request_check(this.xcb, c)))
-    {
-      ADL_ERROR(ADL_ERR_PLATFORM, "dri3_pixmap_from_buffer failure: code %d",
-        error->error_code);
-      free(error);
-      return ADL_ERR_PLATFORM;
+      xcb_gcontext_t gc = xcb_generate_id(this.xcb);
+      xcb_create_gc(this.xcb, gc, idata->pixmap, 0, 0);
+      xcb_put_image(
+        this.xcb,
+        XCB_IMAGE_FORMAT_Z_PIXMAP,
+        idata->pixmap,
+        gc,
+        def.w,
+        def.h,
+        0, 0,
+        0,
+        def.depth,
+        def.h * def.pitch,
+        def.u.buffer
+      );
+      xcb_free_gc(this.xcb, gc);
+      break;
     }
+
+    default:
+      return ADL_ERR_UNSUPPORTED_BACKEND;
   }
 
   ADL_SET_IMAGE_ID(result, idata->pixmap);
