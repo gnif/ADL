@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <signal.h>
 
 #include "xcb.h"
 
@@ -231,6 +232,19 @@ out_no_x:
   return status;
 }
 
+static void xcbSignalHandler(int sig)
+{
+  switch(sig)
+  {
+    case SIGINT:
+    case SIGTERM:
+    {
+      adlQuit();
+      break;
+    }
+  }
+}
+
 static ADL_STATUS xcbInitialize()
 {
   ADL_STATUS status = ADL_OK;
@@ -403,6 +417,11 @@ static ADL_STATUS xcbInitialize()
   this.defaultPointer = xcb_cursor_load_cursor(this.cursorContext, "left_ptr");
 
   this.fd = xcb_get_file_descriptor(this.xcb);
+
+  /* install the signal handler so we can catch SIGINT/SIGTERM */
+  signal(SIGINT , xcbSignalHandler);
+  signal(SIGTERM, xcbSignalHandler);
+
   return status;
 
 err_free_cursor:
@@ -652,6 +671,30 @@ static ADL_STATUS xcbWindowSetFocus(ADLWindow * window)
   return ADL_OK;
 }
 
+static ADL_STATUS xcbWindowEvent(ADLWindow * window, ADLEvent * event)
+{
+  WindowData * data = ADL_GET_WINDOW_DATA(window);
+
+  const xcb_client_message_event_t xe =
+  {
+    .response_type = XCB_CLIENT_MESSAGE,
+    .format        = 32,
+    .sequence      = 0,
+    .window        = data->window,
+    .type          = getAtom(IA_ADL_EVENT),
+    .data          = {
+      {event->type}
+    }
+  };
+
+  xcb_send_event(this.xcb, false, data->window, XCB_EVENT_MASK_NO_EVENT,
+      (const char *)&xe);
+
+  xcb_flush(this.xcb);
+
+  return ADL_OK;
+}
+
 static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
 {
   xcb_generic_event_t * xevent;
@@ -685,19 +728,29 @@ static ADL_STATUS xcbProcessEvent(int timeout, ADLEvent * event)
 
   ADL_STATUS status;
   const bool generated = (xevent->response_type & 0x80) == 0x80;
+
   switch(xevent->response_type & ~0x80)
   {
     case XCB_CLIENT_MESSAGE:
     {
       xcb_client_message_event_t * e = (xcb_client_message_event_t *)xevent;
-      if (e->type != internAtom[IA_WM_PROTOCOLS].atom)
-        break;
+      if (e->type == getAtom(IA_WM_PROTOCOLS))
+      {
+        if (e->data.data32[0] != getAtom(IA_WM_DELETE_WINDOW))
+          break;
 
-      if (e->data.data32[0] != internAtom[IA_WM_DELETE_WINDOW].atom)
+        event->type   = ADL_EVENT_CLOSE;
+        event->window = windowFindById(e->window);
         break;
+      }
 
-      event->type   = ADL_EVENT_CLOSE;
-      event->window = windowFindById(e->window);
+      if (e->type == getAtom(IA_ADL_EVENT))
+      {
+        event->type   = ADL_EVENT_QUIT;
+        event->window = windowFindById(e->window);
+        break;
+      }
+
       break;
     }
 
@@ -1063,6 +1116,7 @@ static struct ADLPlatform xcb =
   .windowSetGrab      = xcbWindowSetGrab,
   .windowSetRelative  = xcbWindowSetRelative,
   .windowSetFocus     = xcbWindowSetFocus,
+  .windowEvent        = xcbWindowEvent,
 
   .imageDataSize      = sizeof(ImageData),
   .imageGetSupported  = xcbImageGetSupported,
