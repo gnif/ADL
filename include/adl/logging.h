@@ -63,7 +63,7 @@ struct ADLLogHandlers
 
 void ADLSetLogHandlers(const struct ADLLogHandlers log);
 
-struct ADLLogHandlers adlLogHandlers;
+extern struct ADLLogHandlers adlLogHandlers;
 
 #if defined(_WIN32) && !defined(__GNUC__)
   #define DIRECTORY_SEPARATOR '\\'

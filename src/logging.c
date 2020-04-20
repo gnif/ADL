@@ -31,6 +31,8 @@
 
 #define ADL_LOG_FORMAT "%16" PRId64 " | %20s:%-4u | %-30s | "
 
+struct ADLLogHandlers adlLogHandlers;
+
 static void adlLogStdout(
   ADL_LOG_LEVEL loglevel,
   ADL_STATUS    status,
